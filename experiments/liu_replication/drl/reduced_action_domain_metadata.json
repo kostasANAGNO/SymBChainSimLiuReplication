@@ -1,0 +1,92 @@
+{
+  "c_n_k": 435,
+  "classification": "REDUCED_COMPLETE_LIU_ACTION_DOMAIN / OUR_RECONSTRUCTION_FOR_TRACTABLE_VALIDATION",
+  "field_descriptions": {
+    "action_id": "Unique integer ID for this action (0-indexed, row-major: validator_sets outer, configs inner)",
+    "block_interval_s": "Block interval T_I in seconds (from paper grid: 0.5-step multiples)",
+    "block_size_mb": "Block size S_B in MB (from paper grid: 0.2-step multiples)",
+    "protocol": "Consensus protocol: PBFT / ZYZZYVA / LIU_QUORUM",
+    "source_sweep_action_id": "action_id from controlled_full_results.csv that generated this (S_B, T_I)",
+    "source_sweep_des_t_f": "des_t_f of source row",
+    "source_sweep_reward": "reward_des_liu_objective of source row",
+    "validator_ids": "JSON list of K validator node IDs (sorted ascending)",
+    "validator_mask": "JSON list of N binary values: 1 if node i in validator set"
+  },
+  "k": 28,
+  "n": 30,
+  "note": "NOT the original full Liu action cardinality. Uses N=30/K=28 vs Liu N=100/K=21.",
+  "protocol_configs": {
+    "LIU_QUORUM": [
+      {
+        "block_interval_s": 1.0,
+        "block_size_mb": 3.4,
+        "source_action_id": "1921",
+        "source_des_t_f": 5.945854545454546,
+        "source_reward": 17000.0
+      },
+      {
+        "block_interval_s": 2.0,
+        "block_size_mb": 6.8,
+        "source_action_id": "2263",
+        "source_des_t_f": 11.89130909090909,
+        "source_reward": 17000.0
+      },
+      {
+        "block_interval_s": 1.5,
+        "block_size_mb": 5.0,
+        "source_action_id": "2082",
+        "source_des_t_f": 8.77312727272727,
+        "source_reward": 16666.666666666668
+      }
+    ],
+    "PBFT": [
+      {
+        "block_interval_s": 3.0,
+        "block_size_mb": 7.0,
+        "source_action_id": "685",
+        "source_des_t_f": 17.619492097445036,
+        "source_reward": 11666.666666666666
+      },
+      {
+        "block_interval_s": 2.5,
+        "block_size_mb": 5.8,
+        "source_action_id": "564",
+        "source_des_t_f": 14.61405894236482,
+        "source_reward": 11600.0
+      },
+      {
+        "block_interval_s": 2.0,
+        "block_size_mb": 4.6,
+        "source_action_id": "443",
+        "source_des_t_f": 11.60862578728461,
+        "source_reward": 11500.0
+      }
+    ],
+    "ZYZZYVA": [
+      {
+        "block_interval_s": 2.5,
+        "block_size_mb": 6.2,
+        "source_action_id": "1404",
+        "source_des_t_f": 14.960172494172493,
+        "source_reward": 12400.0
+      },
+      {
+        "block_interval_s": 3.0,
+        "block_size_mb": 7.4,
+        "source_action_id": "1525",
+        "source_des_t_f": 17.871361305361305,
+        "source_reward": 12333.333333333334
+      },
+      {
+        "block_interval_s": 0.5,
+        "block_size_mb": 1.2,
+        "source_action_id": "900",
+        "source_des_t_f": 2.9135524475524477,
+        "source_reward": 12000.0
+      }
+    ]
+  },
+  "schema_version": "reduced_complete_liu_action_domain_v1",
+  "top_k_configs_per_protocol": 3,
+  "total_actions": 3915
+}
