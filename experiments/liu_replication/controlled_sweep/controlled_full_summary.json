@@ -1,0 +1,172 @@
+{
+  "actions_attempted": 2400,
+  "statuses": {
+    "SUCCESS": 2400
+  },
+  "failure_reasons": {},
+  "total_wall_clock_s": 73900.81719279289,
+  "mean_wall_clock_s": 30.792007163663705,
+  "median_wall_clock_s": 4.119889140129089,
+  "max_wall_clock_s": 63043.947749853134,
+  "paper_c2_pass_count": 2013,
+  "paper_c2_fail_count": 387,
+  "des_c2_pass_count": 2092,
+  "des_c2_fail_count": 308,
+  "c2_disagreement_matrix": {
+    "paper_pass_des_pass": 2013,
+    "paper_pass_des_fail": 0,
+    "paper_fail_des_pass": 79,
+    "paper_fail_des_fail": 308
+  },
+  "paper_fail_des_pass_actions": [
+    "PBFT|S_B=0.8|T_I=0.5",
+    "PBFT|S_B=1.0|T_I=0.5",
+    "PBFT|S_B=1.6|T_I=1.0",
+    "PBFT|S_B=1.8|T_I=1.0",
+    "PBFT|S_B=2.0|T_I=1.0",
+    "PBFT|S_B=2.2|T_I=1.0",
+    "PBFT|S_B=2.4|T_I=1.5",
+    "PBFT|S_B=2.6|T_I=1.5",
+    "PBFT|S_B=2.8|T_I=1.5",
+    "PBFT|S_B=3.0|T_I=1.5",
+    "PBFT|S_B=3.2|T_I=1.5",
+    "PBFT|S_B=3.2|T_I=2.0",
+    "PBFT|S_B=3.4|T_I=1.5",
+    "PBFT|S_B=3.4|T_I=2.0",
+    "PBFT|S_B=3.6|T_I=2.0",
+    "PBFT|S_B=3.8|T_I=2.0",
+    "PBFT|S_B=3.8|T_I=2.5",
+    "PBFT|S_B=4.0|T_I=2.0",
+    "PBFT|S_B=4.0|T_I=2.5",
+    "PBFT|S_B=4.2|T_I=2.0",
+    "PBFT|S_B=4.2|T_I=2.5",
+    "PBFT|S_B=4.4|T_I=2.0",
+    "PBFT|S_B=4.4|T_I=2.5",
+    "PBFT|S_B=4.6|T_I=2.0",
+    "PBFT|S_B=4.6|T_I=2.5",
+    "PBFT|S_B=4.6|T_I=3.0",
+    "PBFT|S_B=4.8|T_I=2.5",
+    "PBFT|S_B=4.8|T_I=3.0",
+    "PBFT|S_B=5.0|T_I=2.5",
+    "PBFT|S_B=5.0|T_I=3.0",
+    "PBFT|S_B=5.2|T_I=2.5",
+    "PBFT|S_B=5.2|T_I=3.0",
+    "PBFT|S_B=5.4|T_I=2.5",
+    "PBFT|S_B=5.4|T_I=3.0",
+    "PBFT|S_B=5.4|T_I=3.5",
+    "PBFT|S_B=5.6|T_I=2.5",
+    "PBFT|S_B=5.6|T_I=3.0",
+    "PBFT|S_B=5.6|T_I=3.5",
+    "PBFT|S_B=5.8|T_I=2.5",
+    "PBFT|S_B=5.8|T_I=3.0",
+    "PBFT|S_B=5.8|T_I=3.5",
+    "PBFT|S_B=6.0|T_I=3.0",
+    "PBFT|S_B=6.0|T_I=3.5",
+    "PBFT|S_B=6.2|T_I=3.0",
+    "PBFT|S_B=6.2|T_I=3.5",
+    "PBFT|S_B=6.2|T_I=4.0",
+    "PBFT|S_B=6.4|T_I=3.0",
+    "PBFT|S_B=6.4|T_I=3.5",
+    "PBFT|S_B=6.4|T_I=4.0",
+    "PBFT|S_B=6.6|T_I=3.0",
+    "PBFT|S_B=6.6|T_I=3.5",
+    "PBFT|S_B=6.6|T_I=4.0",
+    "PBFT|S_B=6.8|T_I=3.0",
+    "PBFT|S_B=6.8|T_I=3.5",
+    "PBFT|S_B=6.8|T_I=4.0",
+    "PBFT|S_B=7.0|T_I=3.0",
+    "PBFT|S_B=7.0|T_I=3.5",
+    "PBFT|S_B=7.0|T_I=4.0",
+    "PBFT|S_B=7.0|T_I=4.5",
+    "PBFT|S_B=7.2|T_I=3.5",
+    "PBFT|S_B=7.2|T_I=4.0",
+    "PBFT|S_B=7.2|T_I=4.5",
+    "PBFT|S_B=7.4|T_I=3.5",
+    "PBFT|S_B=7.4|T_I=4.0",
+    "PBFT|S_B=7.4|T_I=4.5",
+    "PBFT|S_B=7.6|T_I=3.5",
+    "PBFT|S_B=7.6|T_I=4.0",
+    "PBFT|S_B=7.6|T_I=4.5",
+    "PBFT|S_B=7.6|T_I=5.0",
+    "PBFT|S_B=7.8|T_I=3.5",
+    "PBFT|S_B=7.8|T_I=4.0",
+    "PBFT|S_B=7.8|T_I=4.5",
+    "PBFT|S_B=7.8|T_I=5.0",
+    "PBFT|S_B=8.0|T_I=3.5",
+    "PBFT|S_B=8.0|T_I=4.0",
+    "PBFT|S_B=8.0|T_I=4.5",
+    "PBFT|S_B=8.0|T_I=5.0",
+    "ZYZZYVA|S_B=6.2|T_I=2.5",
+    "ZYZZYVA|S_B=7.4|T_I=3.0"
+  ],
+  "paper_pass_des_fail_actions": [],
+  "best_paper_reward": 17000.0,
+  "best_paper_action_set": [
+    "LIU_QUORUM|S_B=3.4|T_I=1.0",
+    "LIU_QUORUM|S_B=6.8|T_I=2.0"
+  ],
+  "best_paper_action_set_size": 2,
+  "best_des_liu_reward": 17000.0,
+  "best_des_action_set": [
+    "LIU_QUORUM|S_B=3.4|T_I=1.0",
+    "LIU_QUORUM|S_B=6.8|T_I=2.0"
+  ],
+  "best_des_action_set_size": 2,
+  "optimal_sets_intersection": [
+    "LIU_QUORUM|S_B=3.4|T_I=1.0",
+    "LIU_QUORUM|S_B=6.8|T_I=2.0"
+  ],
+  "optimal_sets_intersect": true,
+  "per_protocol": {
+    "PBFT": {
+      "attempted": 800,
+      "des_feasible": 680,
+      "paper_feasible": 603,
+      "best_des_action": "PBFT|S_B=7.0|T_I=3.0",
+      "best_des_liu_reward": 11666.666666666666,
+      "best_paper_reward": 7555.555555555556
+    },
+    "ZYZZYVA": {
+      "attempted": 800,
+      "des_feasible": 688,
+      "paper_feasible": 686,
+      "best_des_action": "ZYZZYVA|S_B=6.2|T_I=2.5",
+      "best_des_liu_reward": 12400.0,
+      "best_paper_reward": 12000.0
+    },
+    "LIU_QUORUM": {
+      "attempted": 800,
+      "des_feasible": 724,
+      "paper_feasible": 724,
+      "best_des_action": "LIU_QUORUM|S_B=3.4|T_I=1.0",
+      "best_des_liu_reward": 17000.0,
+      "best_paper_reward": 17000.0
+    }
+  },
+  "largest_discrepancies": {
+    "abs_delta_t_c": {
+      "action": "PBFT|S_B=8.0|T_I=0.5",
+      "value": -10.131147320418194
+    },
+    "abs_delta_t_f": {
+      "action": "PBFT|S_B=8.0|T_I=0.5",
+      "value": -10.131147320418194
+    }
+  },
+  "invariants": {
+    "unique_seeds": [
+      "0"
+    ],
+    "c1_violations": [],
+    "c3_violations": [],
+    "validator_hashes_at_02_10_only": [
+      "23709ea1b2269fea",
+      "ccc5014558427bc5",
+      "dafa386c534c8b8e"
+    ]
+  },
+  "sanity": {
+    "monotonicity_dips": [],
+    "nan_or_negative_metrics": []
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "classification": "CLEAN_RUN_AUTHORITATIVE_SOURCE_FREEZE",
+  "run_tag": "clean",
+  "seed": 42,
+  "generated_at": "2026-09-16T20:25:40.990155Z",
+  "contamination_context": {
+    "quarantined_checkpoint": "contaminated_pre_finality_fix/checkpoints/ckpt_seed42_ep400.pt",
+    "quarantined_step_log": "contaminated_pre_finality_fix/step_log_seed42_CONTAMINATED.csv",
+    "reason": "PRE_C2_FINALITY_FIX: all-N-nodes termination caused false C2DeadlineExceeded; representative audit showed high false-C2 rate under heterogeneous network states, demonstrating material contamination of the training reward signal.",
+    "audit_result": "old-FAIL/new-PASS = 14/18 (78%) in mixed-link conditions"
+  },
+  "semantic_fix": {
+    "gate": "POST_CLEANUP_LIU_SEMANTICS_PRESERVED: PASS",
+    "fix": "ProtocolFinalityRecord-based termination in _run_to_height (first validator commit = consensus finality)",
+    "c2_deadline_preserved": true,
+    "true_failures_still_raise_C2DeadlineExceeded": true
+  },
+  "training_params": {
+    "N": 30,
+    "K": 28,
+    "action_domain_size": 3915,
+    "train_episodes": 400,
+    "pilot_episodes": 15,
+    "steps_per_episode": 20,
+    "reward_scale": 17000.0,
+    "seeds_this_run": [
+      42
+    ],
+    "seeds_to_start_after_gate": "DO_NOT_START_123_7_UNTIL_N30_SEED42_POLICY_VERIFIED"
+  },
+  "drl_config": {
+    "hidden_sizes": [
+      256,
+      128
+    ],
+    "gamma": 0.9,
+    "learning_rate": 0.0005,
+    "replay_capacity": 10000,
+    "replay_warmup_steps": 200,
+    "batch_size": 64,
+    "target_sync_steps": 50,
+    "epsilon_start": 1.0,
+    "epsilon_end": 0.05,
+    "epsilon_decay_steps": "90% of total_steps",
+    "update_every_steps": 1
+  },
+  "fsmc_config": {
+    "levels_mbps": [
+      10.0,
+      55.0,
+      100.0
+    ],
+    "transition_matrix": {
+      "from_LOW": [
+        0.7,
+        0.2,
+        0.1
+      ],
+      "from_MID": [
+        0.15,
+        0.7,
+        0.15
+      ],
+      "from_HIGH": [
+        0.1,
+        0.2,
+        0.7
+      ]
+    },
+    "initialization": "quantize initial_link_rows to nearest FSMC level",
+    "classification": "OUR_RECONSTRUCTION (FSMC levels/rates); PAPER_EXACT (Markov channel structure, range)"
+  },
+  "population": {
+    "stakes": "tuple(4.0 + (i % 10) for i in range(30))",
+    "capabilities_ghz": "tuple(10.0 + (i % 21) for i in range(30))",
+    "positions_km": "tuple((0.2*(i%5), 0.2*(i//5)) for i in range(30))",
+    "initial_link_rows_mbps": "10 + ((i+j) % 91), i!=j; None on diagonal",
+    "offered_workload_tx": 100000,
+    "transaction_size_bytes": 200
+  },
+  "reference_params": {
+    "alpha": 2000000.0,
+    "beta": 1000000.0,
+    "network_timeout_s": 100.0,
+    "omega": 6.0,
+    "eta_s": 0.2,
+    "eta_l": 0.3,
+    "chi_bytes": 200
+  },
+  "source_hashes": {
+    "SingleActionRuntime.py": "f023a251d15d03c4475a99ed18183e87bda09d659246769b5dec542c9938a98c",
+    "liu_dynamic_env.py": "affa3189c1f054f286fe77d19974a8f8118f7b2aa74570392b276190150a1488",
+    "train_n30.py": "2c666f098c4263ba2e1ee3b89c71ecb93a46b3cd5f594d262993b8fb82ad0538",
+    "reduced_action_domain.csv": "b3caafb487e0fca60b4fa385c962696d9a298fde85993a9d2a8bd9c262b66bd6",
+    "config.py": "c32cc1a5868e6e8fca7beb18aba1aee6ab8822eb2ad621ec02e3a68a3cec56dc",
+    "dqn_agent.py": "cc1e36d437d95e858a2d1ff44a6b10f8496a4a514fa1849b695a1bfce403defa",
+    "state_encoder.py": "698ab2f75d0f13bed52bdab4a5e46ab650744252efcdf7cc4787f87a6ae80c61",
+    "action_encoder.py": "f53441d88b7e7f605bdbb9eb55313fd839794982f9d162085f1b6059a3d3b80c",
+    "q_network.py": "d0da81754876c4a8115ea4b781283040b132277695aede2f60f0415033b7b379",
+    "replay_buffer.py": "b4e9cfd3d42f2cad8132d6d8cbfd1da3401914bcf77e7bc10670e689737371d8"
+  },
+  "output_file_convention": {
+    "step_log": "step_log_seed42_clean.csv",
+    "episode_log": "episode_log_seed42_clean.csv",
+    "checkpoints": "ckpt_seed42_clean_ep{N:03d}.pt",
+    "pilot_gate": "pilot_gate_seed42_clean.json"
+  }
+}

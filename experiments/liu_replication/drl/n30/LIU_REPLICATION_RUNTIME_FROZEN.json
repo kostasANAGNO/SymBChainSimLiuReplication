@@ -1,0 +1,94 @@
+{
+  "schema": "liu_replication_runtime_freeze_v1",
+  "gate": "LIU_REPLICATION_RUNTIME_FROZEN",
+  "frozen_at": "2026-09-18",
+  "seed": 42,
+  "run_tag": "clean",
+
+  "freeze_rationale": "All pre-training gates have passed. No simulator semantic changes, no C1/C2/C3 changes, no reward changes, no FSMC changes, no action-domain changes, no protocol changes are permitted until seed-42 training and evaluation completes.",
+
+  "gates_passed": {
+    "POST_CLEANUP_LIU_SEMANTICS_PRESERVED": "PASS",
+    "PRE_C2_FINALITY_FIX_CONTAMINATION_AUDIT": "CONTAMINATED — seed-42 checkpoint quarantined, clean restart required",
+    "CLEAN_N30_PILOT_VERIFIED": "PASS",
+    "M_AUDIT_DECISION": "B — M3_DES_OPERATIONAL_SEMANTICS_ARE_UNDERSPECIFIED_BY_LIU (KNOWN_MISMATCH retained)"
+  },
+
+  "clean_pilot_result": {
+    "pilot_gate_file": "experiments/liu_replication/drl/n30/pilot_gate_seed42_clean.json",
+    "total_steps": 400,
+    "pilot_episodes": 20,
+    "steps_per_episode": 20,
+    "n_feasible_steps": 243,
+    "feasibility_rate": 0.6075,
+    "max_reward": 17000.0,
+    "mean_reward": 7262.0,
+    "epsilon_final": 0.05,
+    "replay_size": 400,
+    "distinct_actions_seen": 241,
+    "n_training_steps": 201,
+    "n_nan_losses": 0,
+    "criteria": {
+      "A_no_crash": true,
+      "B_at_least_one_feasible_step": true,
+      "C_epsilon_decayed": true,
+      "D_replay_filling": true,
+      "E_loss_finite_if_training": true,
+      "F_action_diversity": true
+    },
+    "wall_s": 1566.5
+  },
+
+  "m_audit": {
+    "m_value_analytical": 3,
+    "m_value_des_operational": 1,
+    "classification": "B",
+    "label": "M3_DES_OPERATIONAL_SEMANTICS_ARE_UNDERSPECIFIED_BY_LIU",
+    "disposition": "KNOWN_MISMATCH / DES_OPERATIONAL_REALIZATION",
+    "sensitivity_result": {
+      "n_actions_sampled": 218,
+      "n_link_scenarios": 3,
+      "n_total_evaluations": 654,
+      "c2_classification_changes_m1_to_m3": 0,
+      "link_scenarios": ["GOOD_100Mbps", "MEDIUM_55Mbps", "POOR_10Mbps"]
+    },
+    "explanation": "Liu Table I specifies M=3 for PBFT/Zyzzyva. In AnalyticalPBFT.py, payload_mb = M * block_size_mb and delivery_delay = (t1+t2+t3+t4+t5) / M. For linear-scaling phases, M cancels; for CPU cycles, per-request cost also divides by M. DES realizes M=1 (one block per run_single_action call). Liu provides no operational definition for executing M>1 within one DRL decision epoch. Sensitivity check (654 evaluations) found 0 C2 classification changes. Retained as KNOWN_MISMATCH."
+  },
+
+  "frozen_source_sha256": {
+    "SingleActionRuntime.py": "f023a251d15d03c4475a99ed18183e87bda09d659246769b5dec542c9938a98c",
+    "liu_dynamic_env.py": "affa3189c1f054f286fe77d19974a8f8118f7b2aa74570392b276190150a1488",
+    "train_n30.py": "9f399645b4216f0b4a457e80b6ef3c38e189cf01b3110beef408de5d99d0c580",
+    "dqn_agent.py": "cc1e36d437d95e858a2d1ff44a6b10f8496a4a514fa1849b695a1bfce403defa",
+    "liu_pbft_runtime.yaml": "2cf41246a207d7fd96aea5e475ad569c982670b994ea2bd687b9837da7b986a5",
+    "liu_zyzzyva_runtime.yaml": "3d47fbd9067617eb6ba31c5e6ece492de477ef557a7979e52e5ce52bcbab0a0d",
+    "liu_quorum_runtime.yaml": "319e4168bdc714b31f39841dda1e70a50a1c6546ca1deaf358db5821f99032fb",
+    "ReferenceCore.py": "3448311ed7ffc9dd7d551204348f723fe97fce77a91aa9594af02581f9b866a5",
+    "AnalyticalPBFT.py": "8b50d73e9afe70a1786e93aaef23f3d41963000b037ff61bde970437d1afe178"
+  },
+
+  "full_training_params": {
+    "seed": 42,
+    "run_tag": "clean",
+    "train_episodes": 400,
+    "steps_per_episode": 20,
+    "total_steps": 8000,
+    "reward_scale": 17000.0,
+    "output_files": {
+      "step_log": "experiments/liu_replication/drl/n30/logs/step_log_seed42_clean.csv",
+      "episode_log": "experiments/liu_replication/drl/n30/episode_log_seed42_clean.csv",
+      "checkpoints": "experiments/liu_replication/drl/n30/checkpoints/ckpt_seed42_clean_ep{NNN}.pt",
+      "pilot_gate": "experiments/liu_replication/drl/n30/pilot_gate_seed42_clean.json"
+    }
+  },
+
+  "freeze_constraints": [
+    "NO simulator semantic changes",
+    "NO C1/C2/C3 changes",
+    "NO reward changes",
+    "NO FSMC changes",
+    "NO action-domain changes",
+    "NO protocol changes",
+    "until seed-42 training AND evaluation completes"
+  ]
+}

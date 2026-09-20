@@ -1,0 +1,23 @@
+{
+  "GOOD_100Mbps": {
+    "oracle_best_reward": 17000.0,
+    "oracle_best_action_id": 6,
+    "n_optimal_actions": 768,
+    "n_feasible_actions": 3456,
+    "n_total_actions": 3915
+  },
+  "MEDIUM_55Mbps": {
+    "oracle_best_reward": 17000.0,
+    "oracle_best_action_id": 6,
+    "n_optimal_actions": 768,
+    "n_feasible_actions": 3456,
+    "n_total_actions": 3915
+  },
+  "POOR_10Mbps": {
+    "oracle_best_reward": 0.0,
+    "oracle_best_action_id": 0,
+    "n_optimal_actions": 3915,
+    "n_feasible_actions": 0,
+    "n_total_actions": 3915
+  }
+}

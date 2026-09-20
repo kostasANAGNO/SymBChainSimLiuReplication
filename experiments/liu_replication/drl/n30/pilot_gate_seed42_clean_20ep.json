@@ -1,0 +1,284 @@
+{
+  "schema": "n30_drl_pilot_v1",
+  "mode": "pilot",
+  "n": 30,
+  "k": 28,
+  "chi_bytes": 200,
+  "total_actions": 3915,
+  "state_dim": 991,
+  "action_dim": 35,
+  "pilot_episodes": 20,
+  "steps_per_episode": 20,
+  "total_steps": 400,
+  "seed": 42,
+  "reward_scale": 17000.0,
+  "oracle": {
+    "GOOD_100Mbps": {
+      "oracle_best_reward": 17000.0,
+      "oracle_best_action_id": 6,
+      "n_optimal_actions": 768,
+      "n_feasible_actions": 3456,
+      "n_total_actions": 3915
+    },
+    "MEDIUM_55Mbps": {
+      "oracle_best_reward": 17000.0,
+      "oracle_best_action_id": 6,
+      "n_optimal_actions": 768,
+      "n_feasible_actions": 3456,
+      "n_total_actions": 3915
+    },
+    "POOR_10Mbps": {
+      "oracle_best_reward": 0.0,
+      "oracle_best_action_id": 0,
+      "n_optimal_actions": 3915,
+      "n_feasible_actions": 0,
+      "n_total_actions": 3915
+    }
+  },
+  "pilot_gate": {
+    "gate": "N30_DRL_PILOT_VERIFIED",
+    "gate_awarded": true,
+    "n_steps": 400,
+    "n_feasible_steps": 243,
+    "feasibility_rate": 0.6075,
+    "max_reward": 17000.0,
+    "mean_reward": 7262.0,
+    "epsilon_final": 0.05,
+    "replay_size": 400,
+    "distinct_actions_seen": 241,
+    "n_training_steps": 201,
+    "n_nan_losses": 0,
+    "criteria": {
+      "A_no_crash": true,
+      "B_at_least_one_feasible_step": true,
+      "C_epsilon_decayed": true,
+      "D_replay_filling": true,
+      "E_loss_finite_if_training": true,
+      "F_action_diversity": true
+    }
+  },
+  "episode_log": [
+    {
+      "seed": 42,
+      "episode": 0,
+      "env_name": "GOOD_100Mbps",
+      "episode_reward": 107933.33,
+      "moving_avg": 107933.33,
+      "epsilon": 0.9472,
+      "feasible_steps": 10,
+      "replay_size": 20,
+      "loss_mean": null
+    },
+    {
+      "seed": 42,
+      "episode": 1,
+      "env_name": "MEDIUM_55Mbps",
+      "episode_reward": 125633.33,
+      "moving_avg": 116783.33,
+      "epsilon": 0.8944,
+      "feasible_steps": 10,
+      "replay_size": 40,
+      "loss_mean": null
+    },
+    {
+      "seed": 42,
+      "episode": 2,
+      "env_name": "GOOD_100Mbps",
+      "episode_reward": 159233.33,
+      "moving_avg": 130933.33,
+      "epsilon": 0.8417,
+      "feasible_steps": 15,
+      "replay_size": 60,
+      "loss_mean": null
+    },
+    {
+      "seed": 42,
+      "episode": 3,
+      "env_name": "MEDIUM_55Mbps",
+      "episode_reward": 87000.0,
+      "moving_avg": 119950.0,
+      "epsilon": 0.7889,
+      "feasible_steps": 7,
+      "replay_size": 80,
+      "loss_mean": null
+    },
+    {
+      "seed": 42,
+      "episode": 4,
+      "env_name": "GOOD_100Mbps",
+      "episode_reward": 105500.0,
+      "moving_avg": 117060.0,
+      "epsilon": 0.7361,
+      "feasible_steps": 11,
+      "replay_size": 100,
+      "loss_mean": null
+    },
+    {
+      "seed": 42,
+      "episode": 5,
+      "env_name": "MEDIUM_55Mbps",
+      "episode_reward": 75500.0,
+      "moving_avg": 110133.33,
+      "epsilon": 0.6833,
+      "feasible_steps": 9,
+      "replay_size": 120,
+      "loss_mean": null
+    },
+    {
+      "seed": 42,
+      "episode": 6,
+      "env_name": "GOOD_100Mbps",
+      "episode_reward": 157533.33,
+      "moving_avg": 116904.76,
+      "epsilon": 0.6306,
+      "feasible_steps": 14,
+      "replay_size": 140,
+      "loss_mean": null
+    },
+    {
+      "seed": 42,
+      "episode": 7,
+      "env_name": "MEDIUM_55Mbps",
+      "episode_reward": 116333.33,
+      "moving_avg": 116833.33,
+      "epsilon": 0.5778,
+      "feasible_steps": 10,
+      "replay_size": 160,
+      "loss_mean": null
+    },
+    {
+      "seed": 42,
+      "episode": 8,
+      "env_name": "GOOD_100Mbps",
+      "episode_reward": 122666.67,
+      "moving_avg": 117481.48,
+      "epsilon": 0.525,
+      "feasible_steps": 12,
+      "replay_size": 180,
+      "loss_mean": null
+    },
+    {
+      "seed": 42,
+      "episode": 9,
+      "env_name": "MEDIUM_55Mbps",
+      "episode_reward": 132500.0,
+      "moving_avg": 118983.33,
+      "epsilon": 0.4722,
+      "feasible_steps": 11,
+      "replay_size": 200,
+      "loss_mean": 0.312683
+    },
+    {
+      "seed": 42,
+      "episode": 10,
+      "env_name": "GOOD_100Mbps",
+      "episode_reward": 192300.0,
+      "moving_avg": 125648.48,
+      "epsilon": 0.4194,
+      "feasible_steps": 17,
+      "replay_size": 220,
+      "loss_mean": 0.198242
+    },
+    {
+      "seed": 42,
+      "episode": 11,
+      "env_name": "MEDIUM_55Mbps",
+      "episode_reward": 116033.33,
+      "moving_avg": 124847.22,
+      "epsilon": 0.3667,
+      "feasible_steps": 10,
+      "replay_size": 240,
+      "loss_mean": 0.095299
+    },
+    {
+      "seed": 42,
+      "episode": 12,
+      "env_name": "GOOD_100Mbps",
+      "episode_reward": 178933.33,
+      "moving_avg": 129007.69,
+      "epsilon": 0.3139,
+      "feasible_steps": 15,
+      "replay_size": 260,
+      "loss_mean": 0.100568
+    },
+    {
+      "seed": 42,
+      "episode": 13,
+      "env_name": "MEDIUM_55Mbps",
+      "episode_reward": 176200.0,
+      "moving_avg": 132378.57,
+      "epsilon": 0.2611,
+      "feasible_steps": 15,
+      "replay_size": 280,
+      "loss_mean": 0.080843
+    },
+    {
+      "seed": 42,
+      "episode": 14,
+      "env_name": "GOOD_100Mbps",
+      "episode_reward": 234066.67,
+      "moving_avg": 139157.78,
+      "epsilon": 0.2083,
+      "feasible_steps": 20,
+      "replay_size": 300,
+      "loss_mean": 0.069369
+    },
+    {
+      "seed": 42,
+      "episode": 15,
+      "env_name": "MEDIUM_55Mbps",
+      "episode_reward": 175166.67,
+      "moving_avg": 141408.33,
+      "epsilon": 0.1556,
+      "feasible_steps": 15,
+      "replay_size": 320,
+      "loss_mean": 0.115393
+    },
+    {
+      "seed": 42,
+      "episode": 16,
+      "env_name": "GOOD_100Mbps",
+      "episode_reward": 175733.33,
+      "moving_avg": 143427.45,
+      "epsilon": 0.1028,
+      "feasible_steps": 15,
+      "replay_size": 340,
+      "loss_mean": 0.070873
+    },
+    {
+      "seed": 42,
+      "episode": 17,
+      "env_name": "MEDIUM_55Mbps",
+      "episode_reward": 104933.33,
+      "moving_avg": 141288.89,
+      "epsilon": 0.05,
+      "feasible_steps": 9,
+      "replay_size": 360,
+      "loss_mean": 0.089186
+    },
+    {
+      "seed": 42,
+      "episode": 18,
+      "env_name": "GOOD_100Mbps",
+      "episode_reward": 186333.33,
+      "moving_avg": 143659.65,
+      "epsilon": 0.05,
+      "feasible_steps": 16,
+      "replay_size": 380,
+      "loss_mean": 0.080078
+    },
+    {
+      "seed": 42,
+      "episode": 19,
+      "env_name": "MEDIUM_55Mbps",
+      "episode_reward": 175266.67,
+      "moving_avg": 145240.0,
+      "epsilon": 0.05,
+      "feasible_steps": 15,
+      "replay_size": 400,
+      "loss_mean": 0.064391
+    }
+  ],
+  "wall_s": 1566.5,
+  "label": "OUR_RECONSTRUCTION / NOT_LIU_N100_K21"
+}

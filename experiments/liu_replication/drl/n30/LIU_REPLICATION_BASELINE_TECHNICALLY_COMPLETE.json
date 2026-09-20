@@ -1,0 +1,93 @@
+{
+  "schema": "liu_replication_baseline_complete_v1",
+  "milestone": "LIU_REPLICATION_BASELINE_TECHNICALLY_COMPLETE",
+  "declared_date": "2026-09-20",
+  "seed": 42,
+  "run_tag": "clean",
+
+  "meaning": "The replication baseline for Liu 2019 TII is technically complete for seed 42. This does NOT mean exact reproduction of every unspecified Liu implementation detail. Known mismatches and reconstructions remain documented.",
+
+  "gates_passed": {
+    "POST_CLEANUP_LIU_SEMANTICS_PRESERVED": "PASS",
+    "CLEAN_N30_PILOT_VERIFIED": "PASS",
+    "M_AUDIT_DECISION": "B — KNOWN_MISMATCH retained (analytical M=3, DES M=1)",
+    "LIU_REPLICATION_RUNTIME_FROZEN": "PASS (frozen 2026-09-18)",
+    "N30_DRL_PILOT_VERIFIED": "PASS (ep400, 400 steps, 60.75% feasible, 0 NaN losses)",
+    "N30_SEED42_TRAINING_COMPLETE": "PASS (8000 steps, 59.1% feasible, 8 checkpoints)",
+    "N30_SEED42_POLICY_VERIFIED": "PASS WITH DOCUMENTED LIMITATION (ep400, 2026-09-20)"
+  },
+
+  "components_complete": {
+    "analytical_liu_reference": true,
+    "pbft_des_realization": true,
+    "zyzzyva_des_realization": true,
+    "quorum_des_realization": true,
+    "c1_c2_c3_constraints": true,
+    "liu_reward_objective": true,
+    "state_action_mapping": true,
+    "dynamic_fsmc_environment": true,
+    "validator_selection": true,
+    "drl_training_loop": true,
+    "clean_seed42_dqn_trained": true,
+    "seed42_dqn_beats_random": true,
+    "seed42_dqn_beats_strong_fixed": true,
+    "known_mismatches_documented": true
+  },
+
+  "primary_result_summary": {
+    "policy": "ep400 DQN (greedy, epsilon=0)",
+    "checkpoint": "checkpoints/ckpt_seed42_clean_ep400.pt",
+    "evaluation_file": "n30_seed42_policy_evaluation.json",
+    "eval_seeds": [1000, 1001, 1002, 1003],
+    "n_trajectories": 16,
+    "total_steps": 320,
+    "cumulative_reward": 2716500,
+    "mean_reward_per_step": 8489.06,
+    "feasibility_rate": 0.703125,
+    "validator_c1_valid_rate": 0.996875,
+    "paired_vs_random_wins": "16/16",
+    "paired_vs_random_mean_advantage": 70117,
+    "paired_vs_strong_fixed_wins": "16/16",
+    "paired_vs_strong_fixed_mean_advantage": 140031,
+    "runtime_guard_failures": 9,
+    "runtime_guard_classification": "KNOWN_DES_RUNTIME_GUARD_LIMITATION"
+  },
+
+  "known_mismatches_and_limitations": [
+    {
+      "id": "MISMATCH_M_BATCH",
+      "label": "M3_DES_OPERATIONAL_SEMANTICS_ARE_UNDERSPECIFIED_BY_LIU",
+      "description": "Liu Table I specifies M=3 blocks per DRL epoch for PBFT/Zyzzyva. DES realizes M=1. Sensitivity check (654 evaluations) found 0 C2 classification changes. Analytical M=3 retained.",
+      "classification": "KNOWN_MISMATCH / DES_OPERATIONAL_REALIZATION"
+    },
+    {
+      "id": "LIMITATION_RUNTIME_GUARD",
+      "label": "KNOWN_DES_RUNTIME_GUARD_LIMITATION",
+      "description": "9/320 (2.8%) evaluation steps ended with RUNTIME_GUARD_FAILURE (PBFT view-change cap, OUR_RECONSTRUCTION). Random=16, Strong Fixed=11. Not DQN-specific. Not reinterpreted as C2 results.",
+      "classification": "KNOWN_DES_RUNTIME_GUARD_LIMITATION"
+    },
+    {
+      "id": "RECONSTRUCTION_STATE",
+      "label": "OUR_RECONSTRUCTION — exact state composition (Eq.10)",
+      "description": "Liu Eq.10 defines S_t=[chi, Upsilon, x, c, R(t)]. Normalization constants, tensor ordering, and link-rate encoding are OUR_RECONSTRUCTION.",
+      "classification": "OUR_RECONSTRUCTION / IMPLEMENTATION_DETAIL"
+    },
+    {
+      "id": "RECONSTRUCTION_FSMC",
+      "label": "OUR_RECONSTRUCTION — FSMC transition model",
+      "description": "Liu specifies R(t) evolves dynamically but gives no FSMC transition kernel. Our FSMC is an OUR_RECONSTRUCTION based on plausible link-state Markov dynamics.",
+      "classification": "OUR_RECONSTRUCTION"
+    },
+    {
+      "id": "SINGLE_SEED",
+      "label": "Seed-42 only; seeds 123 and 7 not yet run",
+      "description": "Full robustness experiment (3 seeds) not yet complete. Seeds 123 and 7 are optional experiments for later.",
+      "classification": "OPTIONAL_FUTURE_WORK"
+    }
+  ],
+
+  "not_yet_complete": [
+    "Seeds 123 and 7 (optional robustness; not required for baseline)",
+    "Documentation / thesis write-up (next task)"
+  ]
+}

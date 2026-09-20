@@ -1,0 +1,1132 @@
+{
+  "schema": "n30_seed42_policy_evaluation_v1",
+  "gate": "N30_SEED42_POLICY_VERIFIED",
+  "gate_awarded": true,
+  "gate_awarded_date": "2026-09-20",
+  "gate_criteria": {
+    "A_stable_finite_q": true,
+    "B_near_zero_c1_invalid_selection": true,
+    "C_meaningful_feasible_behavior": true,
+    "D_better_than_random_paired": true,
+    "E_no_runtime_guard_pathology": "PASS_WITH_DOCUMENTED_LIMITATION",
+    "F_policy_adaptation_evidence": true
+  },
+  "criterion_E_classification": {
+    "status": "PASS_WITH_DOCUMENTED_LIMITATION",
+    "classification_label": "KNOWN_DES_RUNTIME_GUARD_LIMITATION",
+    "ep400_runtime_guard_failures": 9,
+    "ep400_total_steps": 320,
+    "ep400_rgf_rate": 0.028125,
+    "random_runtime_guard_failures": 16,
+    "strong_fixed_runtime_guard_failures": 11,
+    "diagnosis": "9/320 (2.8%) steps ended with RUNTIME_GUARD_FAILURE (DESQueueExhausted = PBFT view-change cap, OUR_RECONSTRUCTION). DQN ep400 has FEWER events than both random (16) and strong_fixed (11), confirming this is an environmental property of degraded-link DES simulations, not a DQN-specific pathology. The original gate specification required no SYSTEMATIC runtime-guard pathology; 2.8% concentrated in ALL_LOW_10 / CONTAINS_LOW_10MBPS conditions does not constitute systematic DQN-induced failure.",
+    "guard_origin": "OUR_RECONSTRUCTION — DES PBFT view-change cap, not a Liu-defined C1/C2/C3 constraint",
+    "action_independence_note": "These 9 events are NOT reinterpreted as valid C2 results. They remain RUNTIME_GUARD_FAILURE in all records."
+  },
+  "fsmc_trajectory_verification": {
+    "method": "Direct FSMC advance replay — 4 independent (fsmc, rng) instances per trajectory, advanced without DES, hashes compared at every step",
+    "trajectories_checked": 16,
+    "steps_per_trajectory": 20,
+    "policy_pairs_compared": 6,
+    "total_hash_comparisons": 1920,
+    "mismatches": 0,
+    "result": "PASS",
+    "verification_basis": "env.step() advances self._fsmc exactly once per call on both the success path (line 235) and the exception path (line 285). self._rng is consumed exclusively by the FSMC advance. reset(seed) reinitialises _rng and _fsmc deterministically. Therefore all policies face identical link-state sequences.",
+    "verification_script": "scratchpad/verify_fsmc_trajectory_identity.py",
+    "verified_date": "2026-09-20"
+  },
+  "evaluation_design": {
+    "eval_seeds": [
+      1000,
+      1001,
+      1002,
+      1003
+    ],
+    "eval_steps": 20,
+    "initial_states": [
+      "ALL_HIGH_100",
+      "ALL_MID_55",
+      "ALL_LOW_10",
+      "TRAINING_MIXED"
+    ],
+    "n_trajectories": 16,
+    "total_steps_per_policy": 320,
+    "training_rng_range": [
+      42,
+      441
+    ],
+    "eval_seeds_unseen": true,
+    "fsmc_trajectory_identical_for_all_policies": true,
+    "trajectory_design_note": "Each env reset with same eval_seed \u2192 identical random.Random state \u2192 identical FSMC advance sequence for all 4 policies on each trajectory."
+  },
+  "c1_validity": {
+    "geo_gini": 0.1,
+    "c1_valid_validator_sets": 384,
+    "c1_invalid_validator_sets": 51
+  },
+  "strong_fixed_action": {
+    "action_id": 7,
+    "protocol": "LIU_QUORUM",
+    "block_size_mb": 6.8,
+    "block_interval_s": 2.0,
+    "validator_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27
+    ],
+    "stake_gini": 0.1925,
+    "c1_valid": true
+  },
+  "ep400_primary": {
+    "n_steps": 320,
+    "cumulative_reward": 2716500.0,
+    "mean_reward": 8489.0625,
+    "median_reward": 11666.666666666666,
+    "feasible_steps": 225,
+    "feasibility_rate": 0.7031,
+    "c1_pass": 319,
+    "c2_pass": 225,
+    "c3_pass": 320,
+    "c2_deadline_exceeded": 86,
+    "runtime_guard_failure": 9,
+    "mean_omega_feasible": 12126.6667,
+    "validator_c1_valid_selected": 319,
+    "validator_c1_invalid_selected": 1,
+    "validator_valid_rate": 0.9969,
+    "net_bucket_counts": {
+      "NEAR_HIGH_100MBPS": 4,
+      "CONTAINS_LOW_10MBPS": 312,
+      "MEDIUM_RANGE": 4
+    },
+    "action_profile": {
+      "protocol_dist": {
+        "LIU_QUORUM": 17,
+        "PBFT": 118,
+        "ZYZZYVA": 185
+      },
+      "block_size_dist": {
+        "6.8": 8,
+        "3.4": 9,
+        "4.6": 28,
+        "7.0": 85,
+        "7.4": 87,
+        "6.2": 18,
+        "5.8": 5,
+        "1.2": 80
+      },
+      "block_interval_dist": {
+        "2.0": 36,
+        "1.0": 9,
+        "3.0": 172,
+        "2.5": 23,
+        "0.5": 80
+      },
+      "top10_action_ids": [
+        [
+          553,
+          18
+        ],
+        [
+          1638,
+          15
+        ],
+        [
+          1184,
+          11
+        ],
+        [
+          1179,
+          7
+        ],
+        [
+          455,
+          7
+        ],
+        [
+          1183,
+          6
+        ],
+        [
+          1148,
+          6
+        ],
+        [
+          1593,
+          6
+        ],
+        [
+          1220,
+          5
+        ],
+        [
+          1854,
+          5
+        ]
+      ],
+      "n_distinct_actions": 124
+    },
+    "adaptation_by_network_bucket": {
+      "NEAR_HIGH_100MBPS": {
+        "n": 4,
+        "protocol_dist": {
+          "LIU_QUORUM": 4
+        },
+        "block_size_dist": {
+          "6.8": 4
+        },
+        "block_interval_dist": {
+          "2.0": 4
+        },
+        "feasible": 4,
+        "mean_reward": 17000.0
+      },
+      "CONTAINS_LOW_10MBPS": {
+        "n": 312,
+        "protocol_dist": {
+          "LIU_QUORUM": 13,
+          "PBFT": 118,
+          "ZYZZYVA": 181
+        },
+        "block_size_dist": {
+          "3.4": 9,
+          "4.6": 28,
+          "7.0": 85,
+          "7.4": 83,
+          "6.8": 4,
+          "6.2": 18,
+          "5.8": 5,
+          "1.2": 80
+        },
+        "block_interval_dist": {
+          "1.0": 9,
+          "2.0": 32,
+          "3.0": 168,
+          "2.5": 23,
+          "0.5": 80
+        },
+        "feasible": 217,
+        "mean_reward": 8330.66
+      },
+      "MEDIUM_RANGE": {
+        "n": 4,
+        "protocol_dist": {
+          "ZYZZYVA": 4
+        },
+        "block_size_dist": {
+          "7.4": 4
+        },
+        "block_interval_dist": {
+          "3.0": 4
+        },
+        "feasible": 4,
+        "mean_reward": 12333.33
+      }
+    }
+  },
+  "random_baseline": {
+    "n_steps": 320,
+    "cumulative_reward": 1594633.3333,
+    "mean_reward": 4983.2292,
+    "median_reward": 0.0,
+    "feasible_steps": 147,
+    "feasibility_rate": 0.4594,
+    "c1_pass": 281,
+    "c2_pass": 147,
+    "c3_pass": 320,
+    "c2_deadline_exceeded": 157,
+    "runtime_guard_failure": 16,
+    "mean_omega_feasible": 12061.2245,
+    "validator_c1_valid_selected": 281,
+    "validator_c1_invalid_selected": 39,
+    "validator_valid_rate": 0.8781,
+    "net_bucket_counts": {
+      "NEAR_HIGH_100MBPS": 4,
+      "CONTAINS_LOW_10MBPS": 312,
+      "MEDIUM_RANGE": 4
+    }
+  },
+  "strong_fixed_baseline": {
+    "n_steps": 320,
+    "cumulative_reward": 476000.0,
+    "mean_reward": 1487.5,
+    "median_reward": 0.0,
+    "feasible_steps": 28,
+    "feasibility_rate": 0.0875,
+    "c1_pass": 320,
+    "c2_pass": 28,
+    "c3_pass": 320,
+    "c2_deadline_exceeded": 281,
+    "runtime_guard_failure": 11,
+    "mean_omega_feasible": 17000.0,
+    "validator_c1_valid_selected": 320,
+    "validator_c1_invalid_selected": 0,
+    "validator_valid_rate": 1.0,
+    "net_bucket_counts": {
+      "NEAR_HIGH_100MBPS": 4,
+      "CONTAINS_LOW_10MBPS": 312,
+      "MEDIUM_RANGE": 4
+    }
+  },
+  "ep350_diagnostic": {
+    "n_steps": 320,
+    "cumulative_reward": 2627966.6667,
+    "mean_reward": 8212.3958,
+    "median_reward": 11666.666666666666,
+    "feasible_steps": 218,
+    "feasibility_rate": 0.6813,
+    "c1_pass": 320,
+    "c2_pass": 218,
+    "c3_pass": 320,
+    "c2_deadline_exceeded": 87,
+    "runtime_guard_failure": 15,
+    "mean_omega_feasible": 12054.893,
+    "validator_c1_valid_selected": 320,
+    "validator_c1_invalid_selected": 0,
+    "validator_valid_rate": 1.0,
+    "net_bucket_counts": {
+      "NEAR_HIGH_100MBPS": 4,
+      "CONTAINS_LOW_10MBPS": 312,
+      "MEDIUM_RANGE": 4
+    },
+    "late_training_regression_verdict": "NOT_DETECTED"
+  },
+  "paired_comparisons": {
+    "ep400_vs_random": {
+      "summary": {
+        "n_trajectories": 16,
+        "dqn400_wins": 16,
+        "tied": 0,
+        "random_wins": 0,
+        "mean_paired_diff": 70116.67
+      },
+      "trajectories": [
+        {
+          "eval_seed": 1000,
+          "init_state": "ALL_HIGH_100",
+          "dqn400": 153166.66666666666,
+          "random": 94333.33333333333,
+          "diff": 58833.33333333333
+        },
+        {
+          "eval_seed": 1000,
+          "init_state": "ALL_MID_55",
+          "dqn400": 167166.66666666666,
+          "random": 87200.0,
+          "diff": 79966.66666666666
+        },
+        {
+          "eval_seed": 1000,
+          "init_state": "ALL_LOW_10",
+          "dqn400": 132733.33333333334,
+          "random": 118233.33333333334,
+          "diff": 14500.0
+        },
+        {
+          "eval_seed": 1000,
+          "init_state": "TRAINING_MIXED",
+          "dqn400": 132000.0,
+          "random": 60733.333333333336,
+          "diff": 71266.66666666666
+        },
+        {
+          "eval_seed": 1001,
+          "init_state": "ALL_HIGH_100",
+          "dqn400": 162800.0,
+          "random": 107266.66666666667,
+          "diff": 55533.33333333333
+        },
+        {
+          "eval_seed": 1001,
+          "init_state": "ALL_MID_55",
+          "dqn400": 156666.66666666666,
+          "random": 70533.33333333333,
+          "diff": 86133.33333333333
+        },
+        {
+          "eval_seed": 1001,
+          "init_state": "ALL_LOW_10",
+          "dqn400": 132666.66666666666,
+          "random": 73066.66666666667,
+          "diff": 59599.999999999985
+        },
+        {
+          "eval_seed": 1001,
+          "init_state": "TRAINING_MIXED",
+          "dqn400": 132333.33333333334,
+          "random": 130600.0,
+          "diff": 1733.333333333343
+        },
+        {
+          "eval_seed": 1002,
+          "init_state": "ALL_HIGH_100",
+          "dqn400": 219266.66666666666,
+          "random": 135233.33333333334,
+          "diff": 84033.33333333331
+        },
+        {
+          "eval_seed": 1002,
+          "init_state": "ALL_MID_55",
+          "dqn400": 215633.33333333334,
+          "random": 99100.0,
+          "diff": 116533.33333333334
+        },
+        {
+          "eval_seed": 1002,
+          "init_state": "ALL_LOW_10",
+          "dqn400": 179066.66666666666,
+          "random": 46833.33333333333,
+          "diff": 132233.3333333333
+        },
+        {
+          "eval_seed": 1002,
+          "init_state": "TRAINING_MIXED",
+          "dqn400": 201900.0,
+          "random": 82500.0,
+          "diff": 119400.0
+        },
+        {
+          "eval_seed": 1003,
+          "init_state": "ALL_HIGH_100",
+          "dqn400": 217900.0,
+          "random": 152766.66666666666,
+          "diff": 65133.33333333334
+        },
+        {
+          "eval_seed": 1003,
+          "init_state": "ALL_MID_55",
+          "dqn400": 191400.0,
+          "random": 123133.33333333333,
+          "diff": 68266.66666666667
+        },
+        {
+          "eval_seed": 1003,
+          "init_state": "ALL_LOW_10",
+          "dqn400": 143566.66666666666,
+          "random": 118833.33333333333,
+          "diff": 24733.33333333333
+        },
+        {
+          "eval_seed": 1003,
+          "init_state": "TRAINING_MIXED",
+          "dqn400": 178233.33333333334,
+          "random": 94266.66666666667,
+          "diff": 83966.66666666667
+        }
+      ]
+    },
+    "ep400_vs_strong_fixed": {
+      "summary": {
+        "n_trajectories": 16,
+        "dqn400_wins": 16,
+        "tied": 0,
+        "strong_fixed_wins": 0,
+        "mean_paired_diff": 140031.25
+      },
+      "trajectories": [
+        {
+          "eval_seed": 1000,
+          "init_state": "ALL_HIGH_100",
+          "dqn400": 153166.66666666666,
+          "strong_fixed": 34000.0,
+          "diff": 119166.66666666666
+        },
+        {
+          "eval_seed": 1000,
+          "init_state": "ALL_MID_55",
+          "dqn400": 167166.66666666666,
+          "strong_fixed": 34000.0,
+          "diff": 133166.66666666666
+        },
+        {
+          "eval_seed": 1000,
+          "init_state": "ALL_LOW_10",
+          "dqn400": 132733.33333333334,
+          "strong_fixed": 17000.0,
+          "diff": 115733.33333333334
+        },
+        {
+          "eval_seed": 1000,
+          "init_state": "TRAINING_MIXED",
+          "dqn400": 132000.0,
+          "strong_fixed": 17000.0,
+          "diff": 115000.0
+        },
+        {
+          "eval_seed": 1001,
+          "init_state": "ALL_HIGH_100",
+          "dqn400": 162800.0,
+          "strong_fixed": 51000.0,
+          "diff": 111800.0
+        },
+        {
+          "eval_seed": 1001,
+          "init_state": "ALL_MID_55",
+          "dqn400": 156666.66666666666,
+          "strong_fixed": 17000.0,
+          "diff": 139666.66666666666
+        },
+        {
+          "eval_seed": 1001,
+          "init_state": "ALL_LOW_10",
+          "dqn400": 132666.66666666666,
+          "strong_fixed": 0.0,
+          "diff": 132666.66666666666
+        },
+        {
+          "eval_seed": 1001,
+          "init_state": "TRAINING_MIXED",
+          "dqn400": 132333.33333333334,
+          "strong_fixed": 0.0,
+          "diff": 132333.33333333334
+        },
+        {
+          "eval_seed": 1002,
+          "init_state": "ALL_HIGH_100",
+          "dqn400": 219266.66666666666,
+          "strong_fixed": 102000.0,
+          "diff": 117266.66666666666
+        },
+        {
+          "eval_seed": 1002,
+          "init_state": "ALL_MID_55",
+          "dqn400": 215633.33333333334,
+          "strong_fixed": 85000.0,
+          "diff": 130633.33333333334
+        },
+        {
+          "eval_seed": 1002,
+          "init_state": "ALL_LOW_10",
+          "dqn400": 179066.66666666666,
+          "strong_fixed": 17000.0,
+          "diff": 162066.66666666666
+        },
+        {
+          "eval_seed": 1002,
+          "init_state": "TRAINING_MIXED",
+          "dqn400": 201900.0,
+          "strong_fixed": 17000.0,
+          "diff": 184900.0
+        },
+        {
+          "eval_seed": 1003,
+          "init_state": "ALL_HIGH_100",
+          "dqn400": 217900.0,
+          "strong_fixed": 51000.0,
+          "diff": 166900.0
+        },
+        {
+          "eval_seed": 1003,
+          "init_state": "ALL_MID_55",
+          "dqn400": 191400.0,
+          "strong_fixed": 34000.0,
+          "diff": 157400.0
+        },
+        {
+          "eval_seed": 1003,
+          "init_state": "ALL_LOW_10",
+          "dqn400": 143566.66666666666,
+          "strong_fixed": 0.0,
+          "diff": 143566.66666666666
+        },
+        {
+          "eval_seed": 1003,
+          "init_state": "TRAINING_MIXED",
+          "dqn400": 178233.33333333334,
+          "strong_fixed": 0.0,
+          "diff": 178233.33333333334
+        }
+      ]
+    },
+    "ep400_vs_ep350": {
+      "summary": {
+        "n_trajectories": 16,
+        "dqn_ep400_wins": 10,
+        "tied": 0,
+        "dqn_ep350_wins": 6,
+        "mean_paired_diff": 5533.33
+      },
+      "trajectories": [
+        {
+          "eval_seed": 1000,
+          "init_state": "ALL_HIGH_100",
+          "dqn_ep400": 153166.66666666666,
+          "dqn_ep350": 148400.0,
+          "diff": 4766.666666666657
+        },
+        {
+          "eval_seed": 1000,
+          "init_state": "ALL_MID_55",
+          "dqn_ep400": 167166.66666666666,
+          "dqn_ep350": 145733.33333333334,
+          "diff": 21433.333333333314
+        },
+        {
+          "eval_seed": 1000,
+          "init_state": "ALL_LOW_10",
+          "dqn_ep400": 132733.33333333334,
+          "dqn_ep350": 133566.66666666666,
+          "diff": -833.3333333333139
+        },
+        {
+          "eval_seed": 1000,
+          "init_state": "TRAINING_MIXED",
+          "dqn_ep400": 132000.0,
+          "dqn_ep350": 109400.0,
+          "diff": 22600.0
+        },
+        {
+          "eval_seed": 1001,
+          "init_state": "ALL_HIGH_100",
+          "dqn_ep400": 162800.0,
+          "dqn_ep350": 172900.0,
+          "diff": -10100.0
+        },
+        {
+          "eval_seed": 1001,
+          "init_state": "ALL_MID_55",
+          "dqn_ep400": 156666.66666666666,
+          "dqn_ep350": 156766.66666666666,
+          "diff": -100.0
+        },
+        {
+          "eval_seed": 1001,
+          "init_state": "ALL_LOW_10",
+          "dqn_ep400": 132666.66666666666,
+          "dqn_ep350": 143233.33333333334,
+          "diff": -10566.666666666686
+        },
+        {
+          "eval_seed": 1001,
+          "init_state": "TRAINING_MIXED",
+          "dqn_ep400": 132333.33333333334,
+          "dqn_ep350": 131566.66666666666,
+          "diff": 766.6666666666861
+        },
+        {
+          "eval_seed": 1002,
+          "init_state": "ALL_HIGH_100",
+          "dqn_ep400": 219266.66666666666,
+          "dqn_ep350": 207600.0,
+          "diff": 11666.666666666657
+        },
+        {
+          "eval_seed": 1002,
+          "init_state": "ALL_MID_55",
+          "dqn_ep400": 215633.33333333334,
+          "dqn_ep350": 202500.0,
+          "diff": 13133.333333333343
+        },
+        {
+          "eval_seed": 1002,
+          "init_state": "ALL_LOW_10",
+          "dqn_ep400": 179066.66666666666,
+          "dqn_ep350": 189833.33333333334,
+          "diff": -10766.666666666686
+        },
+        {
+          "eval_seed": 1002,
+          "init_state": "TRAINING_MIXED",
+          "dqn_ep400": 201900.0,
+          "dqn_ep350": 164833.33333333334,
+          "diff": 37066.66666666666
+        },
+        {
+          "eval_seed": 1003,
+          "init_state": "ALL_HIGH_100",
+          "dqn_ep400": 217900.0,
+          "dqn_ep350": 200433.33333333334,
+          "diff": 17466.666666666657
+        },
+        {
+          "eval_seed": 1003,
+          "init_state": "ALL_MID_55",
+          "dqn_ep400": 191400.0,
+          "dqn_ep350": 190100.0,
+          "diff": 1300.0
+        },
+        {
+          "eval_seed": 1003,
+          "init_state": "ALL_LOW_10",
+          "dqn_ep400": 143566.66666666666,
+          "dqn_ep350": 154000.0,
+          "diff": -10433.333333333343
+        },
+        {
+          "eval_seed": 1003,
+          "init_state": "TRAINING_MIXED",
+          "dqn_ep400": 178233.33333333334,
+          "dqn_ep350": 177100.0,
+          "diff": 1133.333333333343
+        }
+      ]
+    }
+  },
+  "q_health": {
+    "n_samples": 8,
+    "any_nan": false,
+    "any_inf": false,
+    "any_degenerate": false,
+    "global_q_min": -6.9377,
+    "global_q_max": 5.9996,
+    "mean_q_std": 0.1986,
+    "samples": [
+      {
+        "q_min": 5.515509128570557,
+        "q_max": 5.999622821807861,
+        "q_mean": 5.78378963470459,
+        "q_std": 0.08596906065940857,
+        "q_has_nan": false,
+        "q_has_inf": false,
+        "q_degenerate": false,
+        "top5_action_ids": [
+          1186,
+          1187,
+          1185,
+          3265,
+          3266
+        ],
+        "eval_seed": 1000,
+        "init_state": "ALL_HIGH_100"
+      },
+      {
+        "q_min": 5.014225959777832,
+        "q_max": 5.288455486297607,
+        "q_mean": 5.175043106079102,
+        "q_std": 0.04880296066403389,
+        "q_has_nan": false,
+        "q_has_inf": false,
+        "q_degenerate": false,
+        "top5_action_ids": [
+          3748,
+          3253,
+          3307,
+          1174,
+          472
+        ],
+        "eval_seed": 1000,
+        "init_state": "ALL_MID_55"
+      },
+      {
+        "q_min": -6.937696933746338,
+        "q_max": -5.528830051422119,
+        "q_mean": -6.1274943351745605,
+        "q_std": 0.346843421459198,
+        "q_has_nan": false,
+        "q_has_inf": false,
+        "q_degenerate": false,
+        "top5_action_ids": [
+          1598,
+          2759,
+          1596,
+          1139,
+          1597
+        ],
+        "eval_seed": 1000,
+        "init_state": "ALL_LOW_10"
+      },
+      {
+        "q_min": 0.5941705703735352,
+        "q_max": 1.9274415969848633,
+        "q_mean": 1.2802529335021973,
+        "q_std": 0.3127036392688751,
+        "q_has_nan": false,
+        "q_has_inf": false,
+        "q_degenerate": false,
+        "top5_action_ids": [
+          1539,
+          1540,
+          1541,
+          1080,
+          1081
+        ],
+        "eval_seed": 1000,
+        "init_state": "TRAINING_MIXED"
+      },
+      {
+        "q_min": 5.515509128570557,
+        "q_max": 5.999622821807861,
+        "q_mean": 5.78378963470459,
+        "q_std": 0.08596906065940857,
+        "q_has_nan": false,
+        "q_has_inf": false,
+        "q_degenerate": false,
+        "top5_action_ids": [
+          1186,
+          1187,
+          1185,
+          3265,
+          3266
+        ],
+        "eval_seed": 1001,
+        "init_state": "ALL_HIGH_100"
+      },
+      {
+        "q_min": 5.014225959777832,
+        "q_max": 5.288455486297607,
+        "q_mean": 5.175043106079102,
+        "q_std": 0.04880296066403389,
+        "q_has_nan": false,
+        "q_has_inf": false,
+        "q_degenerate": false,
+        "top5_action_ids": [
+          3748,
+          3253,
+          3307,
+          1174,
+          472
+        ],
+        "eval_seed": 1001,
+        "init_state": "ALL_MID_55"
+      },
+      {
+        "q_min": -6.937696933746338,
+        "q_max": -5.528830051422119,
+        "q_mean": -6.1274943351745605,
+        "q_std": 0.346843421459198,
+        "q_has_nan": false,
+        "q_has_inf": false,
+        "q_degenerate": false,
+        "top5_action_ids": [
+          1598,
+          2759,
+          1596,
+          1139,
+          1597
+        ],
+        "eval_seed": 1001,
+        "init_state": "ALL_LOW_10"
+      },
+      {
+        "q_min": 0.5941705703735352,
+        "q_max": 1.9274415969848633,
+        "q_mean": 1.2802529335021973,
+        "q_std": 0.3127036392688751,
+        "q_has_nan": false,
+        "q_has_inf": false,
+        "q_degenerate": false,
+        "top5_action_ids": [
+          1539,
+          1540,
+          1541,
+          1080,
+          1081
+        ],
+        "eval_seed": 1001,
+        "init_state": "TRAINING_MIXED"
+      }
+    ]
+  },
+  "concrete_trajectory_example": {
+    "eval_seed": 1000,
+    "init_state": "ALL_HIGH_100",
+    "policy": "dqn_ep400",
+    "steps": [
+      {
+        "step": 0,
+        "net_summary": "mean=100 min=100 Mbps",
+        "net_bucket": "NEAR_HIGH_100MBPS",
+        "protocol": "LIU_QUORUM",
+        "block_size_mb": 6.8,
+        "block_interval_s": 2.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 1,
+        "des_c3": 1,
+        "reward": 17000.0,
+        "failure_reason": "FINALIZED_WITHIN_C2_LIMIT"
+      },
+      {
+        "step": 1,
+        "net_summary": "mean=82 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "LIU_QUORUM",
+        "block_size_mb": 3.4,
+        "block_interval_s": 1.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 0,
+        "des_c3": 1,
+        "reward": 0.0,
+        "failure_reason": "C2_DEADLINE_EXCEEDED"
+      },
+      {
+        "step": 2,
+        "net_summary": "mean=73 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "LIU_QUORUM",
+        "block_size_mb": 3.4,
+        "block_interval_s": 1.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 0,
+        "des_c3": 1,
+        "reward": 0.0,
+        "failure_reason": "C2_DEADLINE_EXCEEDED"
+      },
+      {
+        "step": 3,
+        "net_summary": "mean=66 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "LIU_QUORUM",
+        "block_size_mb": 3.4,
+        "block_interval_s": 1.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 1,
+        "des_c3": 1,
+        "reward": 17000.0,
+        "failure_reason": "FINALIZED_WITHIN_C2_LIMIT"
+      },
+      {
+        "step": 4,
+        "net_summary": "mean=60 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "PBFT",
+        "block_size_mb": 4.6,
+        "block_interval_s": 2.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 1,
+        "des_c3": 1,
+        "reward": 11500.0,
+        "failure_reason": "FINALIZED_WITHIN_C2_LIMIT"
+      },
+      {
+        "step": 5,
+        "net_summary": "mean=58 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "PBFT",
+        "block_size_mb": 7.0,
+        "block_interval_s": 3.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 1,
+        "des_c3": 1,
+        "reward": 11666.666666666666,
+        "failure_reason": "FINALIZED_WITHIN_C2_LIMIT"
+      },
+      {
+        "step": 6,
+        "net_summary": "mean=57 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "ZYZZYVA",
+        "block_size_mb": 7.4,
+        "block_interval_s": 3.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 1,
+        "des_c3": 1,
+        "reward": 12333.333333333334,
+        "failure_reason": "FINALIZED_WITHIN_C2_LIMIT"
+      },
+      {
+        "step": 7,
+        "net_summary": "mean=56 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "LIU_QUORUM",
+        "block_size_mb": 6.8,
+        "block_interval_s": 2.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 0,
+        "des_c3": 1,
+        "reward": 0.0,
+        "failure_reason": "C2_DEADLINE_EXCEEDED"
+      },
+      {
+        "step": 8,
+        "net_summary": "mean=57 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "ZYZZYVA",
+        "block_size_mb": 6.2,
+        "block_interval_s": 2.5,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 1,
+        "des_c3": 1,
+        "reward": 12400.0,
+        "failure_reason": "FINALIZED_WITHIN_C2_LIMIT"
+      },
+      {
+        "step": 9,
+        "net_summary": "mean=56 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "PBFT",
+        "block_size_mb": 5.8,
+        "block_interval_s": 2.5,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 1,
+        "des_c3": 1,
+        "reward": 11600.0,
+        "failure_reason": "FINALIZED_WITHIN_C2_LIMIT"
+      },
+      {
+        "step": 10,
+        "net_summary": "mean=55 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "PBFT",
+        "block_size_mb": 7.0,
+        "block_interval_s": 3.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 0,
+        "des_c3": 1,
+        "reward": 0.0,
+        "failure_reason": "RUNTIME_GUARD_FAILURE"
+      },
+      {
+        "step": 11,
+        "net_summary": "mean=53 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "ZYZZYVA",
+        "block_size_mb": 7.4,
+        "block_interval_s": 3.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 1,
+        "des_c3": 1,
+        "reward": 12333.333333333334,
+        "failure_reason": "FINALIZED_WITHIN_C2_LIMIT"
+      },
+      {
+        "step": 12,
+        "net_summary": "mean=55 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "ZYZZYVA",
+        "block_size_mb": 7.4,
+        "block_interval_s": 3.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 1,
+        "des_c3": 1,
+        "reward": 12333.333333333334,
+        "failure_reason": "FINALIZED_WITHIN_C2_LIMIT"
+      },
+      {
+        "step": 13,
+        "net_summary": "mean=56 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "ZYZZYVA",
+        "block_size_mb": 1.2,
+        "block_interval_s": 0.5,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 0,
+        "des_c3": 1,
+        "reward": 0.0,
+        "failure_reason": "C2_DEADLINE_EXCEEDED"
+      },
+      {
+        "step": 14,
+        "net_summary": "mean=57 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "ZYZZYVA",
+        "block_size_mb": 6.2,
+        "block_interval_s": 2.5,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 0,
+        "des_c3": 1,
+        "reward": 0.0,
+        "failure_reason": "C2_DEADLINE_EXCEEDED"
+      },
+      {
+        "step": 15,
+        "net_summary": "mean=56 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "ZYZZYVA",
+        "block_size_mb": 6.2,
+        "block_interval_s": 2.5,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 0,
+        "des_c3": 1,
+        "reward": 0.0,
+        "failure_reason": "C2_DEADLINE_EXCEEDED"
+      },
+      {
+        "step": 16,
+        "net_summary": "mean=56 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "ZYZZYVA",
+        "block_size_mb": 1.2,
+        "block_interval_s": 0.5,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 0,
+        "des_c3": 1,
+        "reward": 0.0,
+        "failure_reason": "C2_DEADLINE_EXCEEDED"
+      },
+      {
+        "step": 17,
+        "net_summary": "mean=58 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "PBFT",
+        "block_size_mb": 7.0,
+        "block_interval_s": 3.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 1,
+        "des_c3": 1,
+        "reward": 11666.666666666666,
+        "failure_reason": "FINALIZED_WITHIN_C2_LIMIT"
+      },
+      {
+        "step": 18,
+        "net_summary": "mean=59 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "PBFT",
+        "block_size_mb": 7.0,
+        "block_interval_s": 3.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 1,
+        "des_c3": 1,
+        "reward": 11666.666666666666,
+        "failure_reason": "FINALIZED_WITHIN_C2_LIMIT"
+      },
+      {
+        "step": 19,
+        "net_summary": "mean=58 min=10 Mbps",
+        "net_bucket": "CONTAINS_LOW_10MBPS",
+        "protocol": "PBFT",
+        "block_size_mb": 7.0,
+        "block_interval_s": 3.0,
+        "validator_c1_valid": true,
+        "des_c1": 1,
+        "des_c2": 1,
+        "des_c3": 1,
+        "reward": 11666.666666666666,
+        "failure_reason": "FINALIZED_WITHIN_C2_LIMIT"
+      }
+    ]
+  },
+  "wall_s": 4252.0
+}
