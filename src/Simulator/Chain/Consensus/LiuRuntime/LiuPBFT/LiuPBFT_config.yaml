@@ -1,0 +1,8 @@
+# Liu PBFT runtime parameters. View change uses the versioned policies documented
+# in docs/liu_pbft_runtime.md; the timeout below is scoped to epoch/height/view.
+fixed_link_rate_mbps: 100
+propagation_delay_s: 0
+signature_cycles_alpha: 100000000
+mac_cycles_beta: 50000000
+request_timeout_s: 30
+malicious_node_ids: []

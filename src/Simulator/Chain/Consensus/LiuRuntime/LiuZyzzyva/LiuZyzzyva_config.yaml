@@ -1,0 +1,8 @@
+# Fault-free Liu Zyzzyva fast-path runtime parameters.
+fixed_link_rate_mbps: 100
+propagation_delay_s: 0
+signature_cycles_alpha: 100000000
+mac_cycles_beta: 50000000
+request_timeout_s: 30
+faulty_replica_count: 0
+malicious_node_ids: []

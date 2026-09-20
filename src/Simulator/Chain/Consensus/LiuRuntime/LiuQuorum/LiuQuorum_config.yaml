@@ -1,0 +1,14 @@
+# Runtime LiuQuorum model parameters. Units are explicit in each key.
+fixed_link_rate_mbps: 100
+propagation_delay_s: 0
+signature_cycles_alpha: 100000000
+mac_cycles_beta: 50000000
+# request_timeout_s is the minimum (floor) of the state/action-aware request
+# timer (liu_quorum_state_action_timeout_v1); small-block actions keep exactly
+# this frozen pilot value. Large valid actions get safety_factor * estimated
+# slowest all-replies round-trip, clamped to timeout_maximum_s.
+request_timeout_s: 5
+timeout_safety_factor: 2.0
+timeout_maximum_s: 320.0
+malicious_node_ids: []
+replica_faults: []
