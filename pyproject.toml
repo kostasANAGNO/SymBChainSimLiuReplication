@@ -14,8 +14,15 @@ dependencies = [
     "torch>=2.14.0",
 ]
 
-[tool.pytest.ini_options]
-pythonpath = ["src/Simulator"]
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-dir]
+"" = "src/Simulator"
+
+[tool.setuptools.packages.find]
+where = ["src/Simulator"]
 
 [tool.ruff]
 line-length = 200

@@ -3,29 +3,38 @@
 ## Requirements
 
 - Python 3.13+ (3.14 confirmed working)
-- PyTorch, NumPy, PyYAML (managed via `uv` or the project `.venv`)
+- PyTorch, NumPy, PyYAML (installed via pip into the project `.venv`)
 
 ## Setup
 
+From the repository root, install the project in editable mode:
+
 ```bash
-# From repository root — install dependencies into .venv
-.venv\Scripts\python.exe -m pip install -e .   # or: uv sync
+.venv\Scripts\python.exe -m pip install -e . --no-deps
 ```
 
-The project ships a `.venv` with all dependencies installed. Activate it or
-point your IDE interpreter at `.venv\Scripts\python.exe`.
+This registers the simulator packages (`Liu`, `Chain`, `Engine`, `Utils`, `Manager`)
+via a `.pth` file in site-packages, so the interpreter resolves them without any
+manual PYTHONPATH or IDE source-root configuration.
+
+If starting from a fresh environment (no `.venv`):
+
+```bash
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt   # or: uv sync
+.venv\Scripts\python.exe -m pip install -e . --no-deps
+```
 
 ## PyCharm Setup
 
 | Setting | Value |
 |---------|-------|
 | Interpreter | `.venv\Scripts\python.exe` (project-root-relative) |
-| Sources Root | Mark `src/Simulator` as a **Sources Root** (right-click → Mark Directory as) |
 | Working directory | Repository root (`SymBChainSim/`) |
 
-With `src/Simulator` marked as Sources Root, PyCharm resolves `from Liu.* import ...`
-correctly and provides full code completion. The `pythonpath = ["src/Simulator"]` entry
-in `pyproject.toml` covers the same for pytest's test-discovery.
+**No manual Sources Root configuration is needed.** The editable install places
+`src/Simulator` on `sys.path` via the installed `.pth` file, so PyCharm resolves
+`from Liu.* import ...` and `from Chain.* import ...` through the interpreter alone.
 
 ## Running Tests
 
