@@ -1,0 +1,84 @@
+simulation:
+  init_CP: "LiuPBFT"
+  simTime: 20
+  stop_after_blocks: -1
+  stop_after_tx: -1
+  debugging_mode: false
+  logging_level: "INFO"
+  print_every: 100
+  snapshot_interval: -1
+  print_info: false
+
+application:
+  Nn: 5
+  validator_count: 4
+  workload: "generate"
+  TI_dur: 10
+  Tn: 2
+  base_transaction_size: 0.0016
+  Tsize: 0.0008
+  transaction_model: "global"
+
+node_profiles:
+  computational_capability_ghz: [20, 20, 20, 20, 20]
+
+execution:
+  creation_time: 0.02
+  block_val_delay: 0.01
+  msg_val_delay: 0.001
+  sync_message_request_delay: 0.1
+  time_per_tx: 0.001
+  proposer_selection: "round_robin"
+
+data:
+  Bsize: 1
+  base_block_size: 0.002
+  block_time: 0.5
+
+network:
+  base_msg_size: 0.1
+  gossip: true
+  num_neighbours: 4
+  use_latency: "off"
+  same_city_latency_ms: 0
+  same_city_dev_ms: 0
+  queueing_delay: 0
+  processing_delay: 0
+  bandwidth:
+    mean: 5
+    dev: 0
+    min: 5
+    sample: "once"
+
+consensus:
+  BigFoot: Chain/Consensus/BigFoot/BigFoot_config.yaml
+  PBFT: Chain/Consensus/PBFT/PBFT_config.yaml
+  Tendermint: Chain/Consensus/Tendermint/TM_config.yaml
+  LiuQuorum: Chain/Consensus/LiuRuntime/LiuQuorum/LiuQuorum_config.yaml
+  LiuPBFT: Chain/Consensus/LiuRuntime/LiuPBFT/LiuPBFT_config.yaml
+
+behaviour:
+  use: false
+  config: "../Configs/behaviour_config.yaml"
+  print_updates: false
+
+dynamic_sim:
+  use: false
+  config: "../Configs/dynamic_config.yaml"
+  print_updates: false
+
+reconfiguration:
+  reconfigure: false
+  reconfiguration_interval: 300
+  reconfiguration_interval_range: [0, 0]
+  conf_block_size: 0.25
+  reconfiguration_method: "random_centralised"
+  random_configuration:
+    protocols: ["PBFT"]
+    block_sizes: [1]
+    block_times: [0.5]
+  propagation:
+    model: false
+    delay: [0, 0]
+    per_cent_nodes: 1
+  print_updates: false
