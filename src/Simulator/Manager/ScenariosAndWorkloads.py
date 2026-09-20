@@ -20,6 +20,8 @@ def set_up_scenario(manager, scenario, config="scenario.yaml"):
         scenario = json.load(f)
 
     Parameters.application["Nn"] = scenario["set_up"]["num_nodes"]
+    Parameters.configure_validator_set()
+    Parameters.configure_node_profiles()
     Parameters.calculate_fault_tolerance()
 
     Parameters.simulation["simTime"] = scenario["set_up"]["duration"]

@@ -51,7 +51,7 @@ def broadcast_pre_prepare(state: "Tendermint", time: float, block: "Block") -> "
     if Parameters.Tendermint["use_net_msg_size"]:
         payload["net_msg_size"] = get_payload_size(payload)
 
-    event = Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event)
+    event = Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event, recipient_scope="validators")
 
     return event
 
@@ -78,7 +78,7 @@ def broadcast_prepare(state: "Tendermint", time: float, block_hash: int) -> "Eve
     if Parameters.Tendermint["use_net_msg_size"]:
         payload["net_msg_size"] = get_payload_size(payload)
 
-    event = Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event)
+    event = Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event, recipient_scope="validators")
 
     return event
 
@@ -105,7 +105,7 @@ def broadcast_commit(state: "Tendermint", time: float, block_hash: int) -> "Even
     if Parameters.Tendermint["use_net_msg_size"]:
         payload["net_msg_size"] = get_payload_size(payload)
 
-    event = Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event)
+    event = Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event, recipient_scope="validators")
 
     return event
 

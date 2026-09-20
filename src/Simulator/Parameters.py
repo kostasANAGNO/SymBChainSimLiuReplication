@@ -1,6 +1,9 @@
 import yaml
 import sys
 
+from Chain.NodeProfile import NodeProfileSet
+from Chain.ValidatorSet import ValidatorSet
+
 
 def read_yaml(path: str):
     """Reads a yaml file - assumes path is relevant to SBS_SRC"""
@@ -24,6 +27,9 @@ class Parameters:
     BigFoot = {}
     PBFT = {}
     Tendermint = {}
+    LiuQuorum = {}
+    LiuPBFT = {}
+    LiuZyzzyva = {}
 
     behaviour = {}
 
@@ -32,6 +38,12 @@ class Parameters:
     tx_factory = None
 
     global_configuration_chain = []
+
+    # Static for the first validator-separation model. It deliberately remains
+    # outside configuration blocks until dynamic membership is introduced.
+    validator_set: ValidatorSet = None
+    node_profile_set: NodeProfileSet = None
+    _node_profile_config = None
 
     @staticmethod
     def reset_params():
@@ -49,10 +61,16 @@ class Parameters:
         Parameters.BigFoot = {}
         Parameters.PBFT = {}
         Parameters.Tendermint = {}
+        Parameters.LiuQuorum = {}
+        Parameters.LiuPBFT = {}
+        Parameters.LiuZyzzyva = {}
 
         Parameters.reconfiguration = {}
 
         Parameters.global_configuration_chain = []
+        Parameters.validator_set = None
+        Parameters.node_profile_set = None
+        Parameters._node_profile_config = None
 
     @staticmethod
     def load_params_from_config(config):
@@ -86,9 +104,13 @@ class Parameters:
 
         try:
             Parameters.application = params["application"]
+            Parameters.configure_validator_set()
             Parameters.calculate_fault_tolerance()
         except KeyError:
             print("NO 'application' Parameters")
+
+        Parameters._node_profile_config = params.get("node_profiles")
+        Parameters.configure_node_profiles()
 
         Parameters.application["txIDS"] = 0
 
@@ -105,6 +127,9 @@ class Parameters:
         Parameters.BigFoot = read_yaml(params["consensus"]["BigFoot"])
         Parameters.PBFT = read_yaml(params["consensus"]["PBFT"])
         Parameters.Tendermint = read_yaml(params["consensus"]["Tendermint"])
+        Parameters.LiuQuorum = read_yaml(params["consensus"]["LiuQuorum"]) if params["consensus"].get("LiuQuorum") else {}
+        Parameters.LiuPBFT = read_yaml(params["consensus"]["LiuPBFT"]) if params["consensus"].get("LiuPBFT") else {}
+        Parameters.LiuZyzzyva = read_yaml(params["consensus"]["LiuZyzzyva"]) if params["consensus"].get("LiuZyzzyva") else {}
 
         try:
             Parameters.reconfiguration = params["reconfiguration"]
@@ -112,9 +137,31 @@ class Parameters:
             print("NO 'reconfiguration' Parameters")
 
     @staticmethod
+    def configure_validator_set():
+        """Create deterministic static membership; omitted K means all nodes."""
+        total_nodes = Parameters.application["Nn"]
+        validator_count = Parameters.application.get("validator_count")
+        Parameters.validator_set = ValidatorSet.first_nodes(total_nodes, validator_count)
+
+    @staticmethod
+    def configure_node_profiles():
+        """Build one deterministic, ordered profile for every configured node."""
+        Parameters.node_profile_set = NodeProfileSet.from_config(
+            Parameters.application["Nn"],
+            Parameters._node_profile_config,
+        )
+
+    @staticmethod
     def calculate_fault_tolerance():
-        """Calculates f and 2f+1 using number of nodes in the simulation"""
-        Parameters.application["f"] = int((1 / 3) * Parameters.application["Nn"])
+        """Calculate the existing f and 2f+1 arithmetic over validators.
+
+        This intentionally preserves ``int(K / 3)``. For K=21 it yields f=7
+        and required_messages=15, rather than the classical
+        floor((K-1)/3)=6 bound. Correcting that is a separate research change.
+        """
+        if Parameters.validator_set is None:
+            Parameters.configure_validator_set()
+        Parameters.application["f"] = int((1 / 3) * Parameters.validator_set.count)
 
         Parameters.application["required_messages"] = (2 * Parameters.application["f"]) + 1
 

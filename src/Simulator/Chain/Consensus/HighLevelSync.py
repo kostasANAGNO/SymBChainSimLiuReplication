@@ -10,6 +10,7 @@ from Chain.Network import Network
 
 from Engine.Scheduler import Scheduler
 from Engine.Event import Event
+from Utils.ComputationalDelay import ComputationalDelay
 
 from typing import Optional, TYPE_CHECKING
 
@@ -92,7 +93,8 @@ def create_local_sync_event(desynced_node: "Node", request_node: "Node", time: f
         # calculate the transmission delay + validation delay for the block
         delay_network = Network.calculate_message_propagation_delay(request_node, desynced_node, b.size)
 
-        delay = delay_network + Parameters.execution["block_val_delay"] + Parameters.execution["sync_message_request_delay"]
+        validation_delay = ComputationalDelay.for_node(Parameters.execution["block_val_delay"], desynced_node)
+        delay = delay_network + validation_delay + Parameters.execution["sync_message_request_delay"]
 
         # add the delay of the current block to the total delay
         total_delay += delay
@@ -147,7 +149,8 @@ def create_local_sync_event_configuration(desynced_node: "Node", request_node: "
         # calculate the transmission delay + validation delay for the block
         delay_network = Network.calculate_message_propagation_delay(sender=request_node, receiver=desynced_node, message_size=b.size)
 
-        delay = delay_network + Parameters.execution["block_val_delay"] + Parameters.execution["sync_message_request_delay"]
+        validation_delay = ComputationalDelay.for_node(Parameters.execution["block_val_delay"], desynced_node)
+        delay = delay_network + validation_delay + Parameters.execution["sync_message_request_delay"]
 
         total_delay += delay
         missing_blocks[i].time_added = time + total_delay
@@ -198,6 +201,7 @@ def handle_local_sync_event(event) -> str:
                 time=-1,  # time added is calculated by create_local_sync_event_configuration
                 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
                 update_time_added=False,
+                cause="synchronization",
             )
 
     if blockchain[-1].depth < sync_chain[-1].depth:

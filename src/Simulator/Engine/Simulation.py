@@ -6,6 +6,8 @@ from Chain.Reconfiguration.ConfigurationBlock import ConfigurationBlock
 from Chain.TransactionFactory import TransactionFactory
 
 from Utils import Tools
+from Utils.ComputationalDelay import ComputationalDelay
+from Utils.Instrumentation import InstrumentationCollector, RunProfileContext
 
 from Engine.EventQueue import Queue
 from Engine.Handler import handle_event
@@ -40,7 +42,27 @@ class Simulation:
         self.q = Queue()
         self.clock = 0.0
 
-        self.nodes: List[Node] = [Node(x, self.q) for x in range(Parameters.application["Nn"])]
+        self.validator_set = Parameters.validator_set
+        self.node_profile_set = Parameters.node_profile_set
+        InstrumentationCollector.configure_run_context(
+            RunProfileContext(
+                validator_ids=self.validator_set.ids,
+                node_profiles=self.node_profile_set.profiles,
+                computational_capability_reference_ghz=ComputationalDelay.REFERENCE_CAPABILITY_GHZ,
+                capability_scaling_enabled=self.node_profile_set.capability_scaling_enabled,
+                capability_scaling_formula=ComputationalDelay.FORMULA,
+                capability_scaling_scope=(
+                    "consensus_message_validation",
+                    "proposal_block_validation",
+                    "finalized_block_validation",
+                    "synchronization_block_validation",
+                ),
+            )
+        )
+        self.nodes: List[Node] = [
+            Node(x, self.q, self.validator_set, self.node_profile_set.profile_for(x))
+            for x in range(Parameters.application["Nn"])
+        ]
 
         self.manager: "Manager"
 

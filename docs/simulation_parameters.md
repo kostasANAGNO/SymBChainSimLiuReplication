@@ -19,12 +19,32 @@ Most of SymbChainSim’s components are controlled through the configuration yam
 | Parameter               | Description |
 | ----------------------- | ----------- |
 | `Nn`                    | Number of nodes in the blockchain network |
+| `validator_count`       | Optional static validator count. If omitted, every node is a validator. When set to K, validator IDs are deterministically `0..K-1` |
 | `workload`              | Workload generation mode: `'generate'` (parameter based) or `'path_to_workload_trace'` (trace-based) |
 | `TI_dur`                | Transaction generation interval (every N seconds generate transactions for the next N seconds) |
 | `Tn`                    | Total number of transactions to generate per second |
 | `base_transaction_size` | Base size of transactions in MB |
 | `Tsize`                 | Transaction size variation in MB (standard deviation) |
 | `transaction_model`     | Transaction pool model: `"global"` (one pool) or `"local"` (each node has its own pool) |
+
+`validator_count` separates consensus participants from passive observers. Validators propose blocks, vote, and participate in round changes. Observers retain protocol state only to receive finalized blocks and support synchronization/recovery. Consensus messages are validator-only; finalized `new_block` messages remain all-node messages.
+
+The current fault-tolerance arithmetic is intentionally preserved as `f = int(K / 3)` and `required_messages = 2*f + 1`. Therefore `K=21` produces `f=7` and `required_messages=15`. This differs from the classical `floor((K-1)/3)` bound and is retained for compatibility pending a separate research decision.
+
+## node_profiles
+
+`node_profiles` is an optional top-level section containing explicit ordered values for all `Nn` node IDs. Its two lists are:
+
+| Parameter | Description |
+| --------- | ----------- |
+| `stake_tokens` | Static stake value for each node, ordered by node ID |
+| `computational_capability_ghz` | Static compute capability for each node, ordered by node ID |
+
+Each supplied list must contain exactly `Nn` values. The resulting immutable `NodeProfileSet` contains one immutable `NodeProfile(node_id, stake_tokens, computational_capability_ghz)` per node. Network location remains owned by the existing network model and is not duplicated in profiles.
+
+If `stake_tokens` is omitted, stake remains `None`; equal stake is not imputed and `stake_gini` is unavailable. If `computational_capability_ghz` is omitted, capability remains `None` and every computational delay is exactly the legacy delay.
+
+The Liu-style example in `src/Configs/liu_static_validators.yaml` uses explicit values rather than RNG sampling. Its values span 1–50 tokens and 10–30 GHz.
 
 ## execution
 | Parameter                    | Description |
@@ -35,6 +55,16 @@ Most of SymbChainSim’s components are controlled through the configuration yam
 | `sync_message_request_delay` | Time required to request missing data from a peer (s) |
 | `time_per_tx`                | Time required to validate each transaction in a received block (s) |
 | `proposer_selection`         | Proposer selection algorithm: `"hash"` (based on latest block hash) or `"round_robin"` |
+
+Configured computational capability scales only computational validation work according to:
+
+`scaled_delay = base_delay * 20 GHz / computational_capability_ghz`
+
+Here 20 GHz is a SymBChainSim backward-compatibility calibration reference, not a Liu-specified constant. Thus 10, 20, and 30 GHz produce respectively 2×, 1×, and 2/3× the configured base validation delay. Scaling is limited to consensus-message validation, proposal/block validation, finalized-block validation, and the block-validation portion of synchronization. It does not change block creation, per-transaction creation work, block interval/timeouts, or any network property.
+
+Static profiles are exported separately from raw instrumentation through `InstrumentationCollector.export_run_context()`. This export includes the ordered profiles, validator IDs, reference capability, formula, enabled state, and scaling scope. Stake or capability is not duplicated in transaction, proposal, decision, or observation records.
+
+Research decentralization output keeps `producer_gini`, `stake_gini`, and `geographic_gini` distinct. Producer and stake populations are the ordered validators. `geographic_gini` remains unavailable with an explicit reason because the current location model does not define the spatial-intensity variable required by the Liu formulation.
 
 ## data
 | Parameter         | Description |

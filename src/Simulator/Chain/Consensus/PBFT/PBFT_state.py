@@ -178,9 +178,9 @@ class PBFT(ConsensusProtocol.ConsensusProtocol):
             - hash_based: (last_block_hash + self.round) mod number of block producers
         """
         if Parameters.execution["proposer_selection"] == "round_robin":
-            self.miner = self.rounds.round % Parameters.application["Nn"]
+            self.miner = self.node.active_validator_set.proposer_for(self.rounds.round)
         elif Parameters.execution["proposer_selection"] == "hash":
-            self.miner = (self.node.last_block.id + self.rounds.round) % Parameters.application["Nn"]
+            self.miner = self.node.active_validator_set.proposer_for(self.node.last_block.id + self.rounds.round)
         else:
             raise ValueError(f"No such 'proposer_selection {Parameters.execution['proposer_selection']}")
         logger.debug(f"Node {self.node.id}: Selected miner {self.miner} for round {self.rounds.round}")
@@ -252,6 +252,9 @@ class PBFT(ConsensusProtocol.ConsensusProtocol):
         self.block = None
         self.get_miner()
 
+        if not self.node.is_validator:
+            return None
+
         time += self.node.reconfiguration_state.configuration.block_time
         timeouts.schedule_timeout(self, time)
 
@@ -308,6 +311,9 @@ class PBFT(ConsensusProtocol.ConsensusProtocol):
         if not event.actor or not event.actor.cp or event.actor.cp.NAME != PBFT.NAME:
             print(f"actor with {event.actor.cp.NAME} tried to execute event {event} at PBFT state")
             return "different protocol"
+
+        if not event.actor.is_validator and event.payload["type"] != "new_block":
+            return "invalid"
 
         match event.payload["type"]:
             case "propose":

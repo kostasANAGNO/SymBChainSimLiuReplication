@@ -4,6 +4,9 @@ from Chain.Network import Network
 from Chain.Consensus.PBFT.PBFT_state import PBFT
 from Chain.Consensus.BigFoot.BigFoot_state import BigFoot
 from Chain.Consensus.Tendermint.TM_state import Tendermint
+from Chain.Consensus.LiuRuntime.LiuQuorum.Protocol import LiuQuorum
+from Chain.Consensus.LiuRuntime.LiuPBFT.Protocol import LiuPBFT
+from Chain.Consensus.LiuRuntime.LiuZyzzyva.Protocol import LiuZyzzyva
 
 from Engine.Event import Event, SystemEvent
 from Engine.Simulation import Simulation
@@ -11,6 +14,8 @@ from Engine.Simulation import Simulation
 from Utils import Tools
 from Utils.Metrics import Metrics
 from Utils import Snapshots
+from Utils.Instrumentation import InstrumentationCollector
+from Utils.LiuRuntimeInstrumentation import LiuRuntimeInstrumentationCollector
 
 import Manager.SimulationUpdates as updates
 
@@ -44,6 +49,9 @@ class Manager:
             PBFT.NAME: PBFT,
             BigFoot.NAME: BigFoot,
             Tendermint.NAME: Tendermint,
+            LiuQuorum.NAME: LiuQuorum,
+            LiuPBFT.NAME: LiuPBFT,
+            LiuZyzzyva.NAME: LiuZyzzyva,
         }
 
         self.sim: Simulation = None
@@ -59,6 +67,8 @@ class Manager:
         Args:
             config (str): The configuration file to load parameters from. Defaults to "base.yaml".
         """
+        InstrumentationCollector.reset()
+        LiuRuntimeInstrumentationCollector.reset()
         Parameters.load_params_from_config(config)
         Tools.parse_cmd_args()
 
@@ -80,6 +90,8 @@ class Manager:
         """
         if num_nodes != -1:
             Parameters.application["Nn"] = num_nodes
+            Parameters.configure_validator_set()
+            Parameters.configure_node_profiles()
             Parameters.calculate_fault_tolerance()
             logger.debug(f"Number of nodes set to {num_nodes} and fault tolerance calculated.")
 
@@ -132,7 +144,7 @@ class Manager:
 
         if processed_all := (Parameters.simulation["stop_after_tx"] != -1):
             # TODO: Every node keeps track of processed transactions
-            curr_processed = [sum([len(block.transactions) for block in node.blockchain]) for node in self.sim.nodes]
+            curr_processed = [sum([len(block.transactions) for block in node.blockchain]) for node in self.sim.nodes if node.is_validator]
             processed_all = all(
                 map(
                     lambda x: x >= Parameters.simulation["stop_after_tx"],

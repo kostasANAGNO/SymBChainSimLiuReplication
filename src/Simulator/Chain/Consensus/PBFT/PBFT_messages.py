@@ -50,7 +50,7 @@ def broadcast_pre_prepare(state: "PBFT", time: float, block: "Block") -> None:
         "CP": state.NAME,
     }
 
-    Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event)
+    Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event, recipient_scope="validators")
 
 
 def broadcast_prepare(state: "PBFT", time: float, block: "Block") -> None:
@@ -72,7 +72,7 @@ def broadcast_prepare(state: "PBFT", time: float, block: "Block") -> None:
         "CP": state.NAME,
     }
 
-    Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event)
+    Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event, recipient_scope="validators")
 
 
 def broadcast_commit(state: "PBFT", time: float, block: "Block") -> None:
@@ -94,7 +94,7 @@ def broadcast_commit(state: "PBFT", time: float, block: "Block") -> None:
         "CP": state.NAME,
     }
 
-    Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event)
+    Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event, recipient_scope="validators")
 
 
 def broadcast_new_block(state: "PBFT", time: float, block: "Block") -> None:

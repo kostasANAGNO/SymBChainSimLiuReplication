@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__.split(".")[-1])
 
 def broadcast_round_change_message(node, new_round, time):
     payload = {"type": "round_change", "new_round": new_round, "CP": node.cp.NAME}
-    Scheduler.schedule_broadcast_message(node, time, payload, handle_event)
+    Scheduler.schedule_broadcast_message(node, time, payload, handle_event, recipient_scope="validators")
 
 
 # -----------------------------------------------------------
@@ -77,6 +77,9 @@ def change_round(node: "Node", time: float):
     Begins the round change process in *node*. Specifically, changes the node CP state  to 'round_change'
     and broadcasts 'round_change' message for new_round (new_round is decided by get_next_round)
     """
+    if not node.is_validator:
+        return "invalid"
+
     # executes protocol specific actions that might be required when entering
     # round change mode
     node.cp.init_round_change(time)
@@ -106,6 +109,8 @@ def handle_round_change_msg(event: "MessageEvent") -> str:
             start a new concuss round at round 'new_round'
     """
     node = event.receiver
+    if not node.is_validator or not event.creator.is_validator:
+        return "invalid"
     time = event.time
     new_round = event.payload["new_round"]
     cp_state = node.cp
@@ -176,6 +181,9 @@ def process_round_change_vote(node: "Node", new_round: int, voter: "Node"):
         else:
             vote is invalid
     """
+    if not node.is_validator or not voter.is_validator:
+        return "invalid"
+
     msgs = node.cp.rounds.votes
     voter_id = voter.id
 

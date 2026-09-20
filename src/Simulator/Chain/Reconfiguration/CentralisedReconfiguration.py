@@ -73,3 +73,5 @@ def propagate_configuration_block(manager: "Manager", configuration_block: Confi
     else:
         for node in manager.sim.nodes:
             node.reconfiguration_state.confchain.append(configuration_block)
+            if not node.is_validator:
+                node.update(time)

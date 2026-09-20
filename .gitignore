@@ -162,3 +162,28 @@ dmypy.json
 cython_debug/
 
 
+
+# Editor
+.idea/
+
+# Research papers (copyrighted; not distributed)
+docs/papers/
+
+# Liu replication: generated training artifacts (not versioned)
+# Model checkpoints
+experiments/liu_replication/**/checkpoints/
+experiments/liu_replication/**/*.pt
+# Per-step training logs (large; keep episode_log and summary only)
+experiments/liu_replication/**/*step_log*.csv
+# Raw single-run JSON files from batch experiments
+experiments/liu_replication/**/raw/runs/
+experiments/liu_replication/**/raw/primary_runs/
+experiments/liu_replication/**/raw/calibration_runs/
+experiments/liu_replication/**/raw/stability_runs/
+experiments/liu_replication/**/raw/raw_runs.csv
+# Legacy checkpoint formats
+experiments/liu_replication/**/checkpoint_episode_*.json
+experiments/liu_replication/**/checkpoint.json
+experiments/liu_replication/**/*_final_checkpoint.json
+experiments/liu_replication/**/checkpoint_manifest_mismatch_probe.json
+experiments/liu_replication/**/step_metrics.csv

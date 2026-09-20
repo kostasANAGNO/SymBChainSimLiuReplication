@@ -177,11 +177,11 @@ class Tendermint(ConsensusProtocol):
         """
         if Parameters.execution["proposer_selection"] == "round_robin":
             # new miner in a round robin fashion
-            self.miner = self.rounds.round % Parameters.application["Nn"]
+            self.miner = self.node.active_validator_set.proposer_for(self.rounds.round)
         elif Parameters.execution["proposer_selection"] == "hash":
             # get new miner based on the hash of the last block + the round (to
             # avoid endlessly waiting for offline nodes)
-            self.miner = (self.node.last_block.id + self.rounds.round) % Parameters.application["Nn"]
+            self.miner = self.node.active_validator_set.proposer_for(self.node.last_block.id + self.rounds.round)
         else:
             raise (ValueError(f"No such 'proposer_selection {Parameters.execution['proposer_selection']}"))
         logger.debug(f"Node {self.node.id}: Selected miner {self.miner} for round {self.rounds.round}")
@@ -251,6 +251,9 @@ class Tendermint(ConsensusProtocol):
         self.block = None
         self.get_miner()
 
+        if not self.node.is_validator:
+            return None
+
         # taking into account block interval for the proposal round timeout
         time += self.node.reconfiguration_state.configuration.block_time
 
@@ -306,6 +309,8 @@ class Tendermint(ConsensusProtocol):
         if event.actor.cp.NAME != Tendermint.NAME:
             print(f"actor at {event.actor.cp.NAME} tried to execute event {event} at Tendermint state")
             return "different_state"
+        if not event.actor.is_validator and event.payload["type"] != "new_block":
+            return "invalid"
         match event.payload["type"]:
             case "propose":
                 return state_transitions.propose(event.actor.cp, event)

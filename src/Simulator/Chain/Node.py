@@ -11,6 +11,7 @@ from Chain.Reconfiguration.ReconfigurationState import ReconfigurationState
 from Engine.Scheduler import Scheduler
 
 from Utils import Tools
+from Utils.Instrumentation import BlockObservationRecord, InstrumentationCollector
 
 from types import SimpleNamespace
 from collections import deque
@@ -21,6 +22,8 @@ if TYPE_CHECKING:
     from Engine.EventQueue import Queue
     from Engine.Event import Event
     from Chain.TransactionFactory import Transaction
+    from Chain.ValidatorSet import ValidatorSet
+    from Chain.NodeProfile import NodeProfile
 
 
 import logging
@@ -47,8 +50,18 @@ class Node:
         reconfiguration_state (ReconfigurationState): controls dynamic reconfiguration of the node
     """
 
-    def __init__(self, id: int, queue: "Queue"):
+    def __init__(
+        self,
+        id: int,
+        queue: "Queue",
+        validator_set: "ValidatorSet" = None,
+        profile: "NodeProfile" = None,
+    ):
         self.id: int = id
+        self._validator_set = validator_set
+        self._profile = profile
+        self._liu_epoch_id = None
+        self._liu_epoch_ready = True
         self.blockchain: list["Block"] = []
         self.pool: Deque["Transaction"] = deque([])
         self.blocks: int = 0
@@ -238,7 +251,7 @@ class Node:
             logger.debug(f"Node {self.id}: Rejoining latest configuration after resurrection at time {time}.")
             self.join_latest_conf(time)
 
-    def add_block(self, block: "Block", time: float, update_time_added: bool = True) -> None:
+    def add_block(self, block: "Block", time: float, update_time_added: bool = True, cause: str = "local_consensus_decision") -> None:
         """
         Adds 'block' to blockchain at time 'time'.
         Removes included transactions from the memory pool
@@ -249,6 +262,19 @@ class Node:
 
         self.blockchain.append(block)
         TransactionFactory.mark_transactions_as_processed(block, self.pool)
+
+        InstrumentationCollector.record_block_observation(
+            BlockObservationRecord(
+                block_id=block.id,
+                block_depth=block.depth,
+                node_id=self.id,
+                observation_time=block.time_added,
+                consensus_protocol=block.consensus,
+                round=block.extra_data["round"],
+                configuration_depth=block.extra_data["configuration_depth"],
+                cause=cause,
+            )
+        )
 
     def add_event(self, event: "Event") -> None:
         """Adds an event to the event queue (if the node is online)"""
@@ -306,6 +332,43 @@ class Node:
     def blockchain_length(self):
         """Returns the length of the blockchain (excluding the genesis block)"""
         return len(self.blockchain) - 1
+
+    @property
+    def active_validator_set(self) -> "ValidatorSet":
+        """Return the shared static set through a future-compatible accessor."""
+        return self._validator_set
+
+    def activate_liu_epoch(self, validator_set: "ValidatorSet", epoch_id: int, ready: bool) -> None:
+        """Point this node at a new immutable epoch membership snapshot."""
+        self._validator_set = validator_set
+        self._liu_epoch_id = epoch_id
+        self._liu_epoch_ready = bool(ready)
+
+    @property
+    def liu_epoch_ready(self) -> bool:
+        return self._liu_epoch_ready
+
+    @property
+    def liu_epoch_id(self) -> int | None:
+        return self._liu_epoch_id
+
+    @property
+    def profile(self) -> "NodeProfile":
+        """Return this node's immutable static research profile, if configured."""
+        return self._profile
+
+    @property
+    def stake_tokens(self) -> float | None:
+        return None if self._profile is None else self._profile.stake_tokens
+
+    @property
+    def computational_capability_ghz(self) -> float | None:
+        return None if self._profile is None else self._profile.computational_capability_ghz
+
+    @property
+    def is_validator(self) -> bool:
+        """Node role derived from the immutable validator set, never a mutable flag."""
+        return self._validator_set is None or self._validator_set.contains(self.id)
 
     @property
     def ids(self):

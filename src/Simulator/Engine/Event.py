@@ -68,6 +68,9 @@ class Event:
         self.time = time
         self.payload = payload
         self.actor = creator
+        # Routing metadata is deliberately outside payload so it contributes no
+        # simulated message bytes. Existing messages retain all-node routing.
+        self.recipient_scope = "all"
 
 
 class MessageEvent(Event):
@@ -125,7 +128,9 @@ class MessageEvent(Event):
         Returns:
             MessageEvent: A new MessageEvent instance based on the source event.
         """
-        return MessageEvent(event.handler, event.creator, event.time, event.payload, event.id, receiver)
+        message = MessageEvent(event.handler, event.creator, event.time, event.payload, event.id, receiver)
+        message.recipient_scope = event.recipient_scope
+        return message
 
 
 class SystemEvent(Event):

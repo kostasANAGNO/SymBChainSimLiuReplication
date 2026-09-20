@@ -15,7 +15,9 @@ class Scheduler:
     """
 
     @staticmethod
-    def schedule_broadcast_message(creator: "Node", time: float, payload: dict[str, Any], handler: Any, id: int = -1) -> Event:
+    def schedule_broadcast_message(
+        creator: "Node", time: float, payload: dict[str, Any], handler: Any, id: int = -1, recipient_scope: str = "all"
+    ) -> Event:
         """
         Schedules a broadcast message event in the network.
         This function creates an event representing the broadcasting of a message
@@ -36,6 +38,7 @@ class Scheduler:
 
         # Schedules a message broadcast from node
         event = Event(handler, creator, time, payload, id=id)
+        event.recipient_scope = recipient_scope
         Network.send_message(creator, event)
         return event
 

@@ -1,6 +1,7 @@
 from Parameters import Parameters
 
 from Chain.Network import Network
+from Utils.Instrumentation import InstrumentationCollector, TransactionCreationRecord
 
 from collections import deque
 import random
@@ -16,6 +17,24 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+# Exact integer-byte accounting for block capacity (Liu Eq.(1) uses SI: 1 MB = 10^6 B,
+# matching LiuReferenceParameters.megabytes_to_bytes = 1e6). Capacity/inclusion decisions
+# MUST NOT depend on floating-point accumulation of MB-sized values (see the 999/1000
+# investigation). Timing calculations (8*MB/Mbps) may remain floating point.
+BYTES_PER_MB_EXACT: int = 1_000_000
+
+
+def size_in_exact_bytes(size_mb: float) -> int:
+    """Convert a MB-denominated size to exact integer bytes for capacity accounting.
+
+    Uses SI 1 MB = 10^6 B (Liu convention), with a single rounding to remove the tiny
+    representation error inherent in `0.0002 MB`-style floats. Values that are exact
+    multiples of 1 B (e.g. paper grid `S_B in {0.2, 0.4, ...}` MB, tx sizes in whole
+    bytes) round to the mathematically intended integer.
+    """
+    return round(float(size_mb) * BYTES_PER_MB_EXACT)
+
+
 class Transaction:
     """
     Represents a single transaction in the blockchain system.
@@ -28,12 +47,34 @@ class Transaction:
         processed (bool): Whether the transaction has been processed/committed.
     """
 
-    def __init__(self, creator: int, id: int, timestamp: float, size: float) -> None:
+    def __init__(
+        self,
+        creator: int,
+        id: int,
+        timestamp: float,
+        size: float,
+        original_creation_time: float = None,
+    ) -> None:
         self.creator = creator
         self.id = id
-        self.timestamp = timestamp
+        self._original_creation_time = timestamp if original_creation_time is None else original_creation_time
+        self.available_at = timestamp
         self.size = size
         self.processed = False
+
+    @property
+    def original_creation_time(self) -> float:
+        """Immutable timestamp at which the canonical transaction was created."""
+        return self._original_creation_time
+
+    @property
+    def timestamp(self) -> float:
+        """Backward-compatible alias for mempool availability time."""
+        return self.available_at
+
+    @timestamp.setter
+    def timestamp(self, value: float) -> None:
+        self.available_at = value
 
     def __str__(self) -> str:
         return f"TX({self.timestamp},{self.size})"
@@ -82,7 +123,7 @@ class TransactionFactory:
                         continue
                     prop_delay = Network.calculate_message_propagation_delay(TransactionFactory.nodes[tx.creator], node, tx.size)
                     new_timestamp = tx.timestamp + prop_delay
-                    tx = Transaction(tx.creator, tx.id, new_timestamp, tx.size)
+                    tx = Transaction(tx.creator, tx.id, new_timestamp, tx.size, tx.original_creation_time)
                     node.pool.append(tx)
             case "global":
                 prop_delay = Network.calculate_message_propagation_delay(
@@ -91,7 +132,7 @@ class TransactionFactory:
                     tx.size,
                 )
                 new_timestamp = tx.timestamp + prop_delay
-                tx = Transaction(tx.creator, tx.id, new_timestamp, tx.size)
+                tx = Transaction(tx.creator, tx.id, new_timestamp, tx.size, tx.original_creation_time)
                 TransactionFactory.global_mempool.append(tx)
             case _:
                 logger.error(f"Unknown transaction model: '{Parameters.application['transaction_model']}'")
@@ -109,6 +150,14 @@ class TransactionFactory:
 
         for creator, id, timestamp, size in txion_list:
             t = Transaction(creator, id, timestamp, size / 1e6)
+            InstrumentationCollector.record_transaction_creation(
+                TransactionCreationRecord(
+                    transaction_id=t.id,
+                    creator_node_id=t.creator,
+                    original_creation_time=t.original_creation_time,
+                    transaction_size=t.size,
+                )
+            )
             TransactionFactory.transaction_prop(t)
 
     @staticmethod
@@ -137,7 +186,16 @@ class TransactionFactory:
 
                 creator = random.choice(TransactionFactory.nodes)
 
-                TransactionFactory.transaction_prop(Transaction(creator.id, id, timestamp, size))
+                transaction = Transaction(creator.id, id, timestamp, size)
+                InstrumentationCollector.record_transaction_creation(
+                    TransactionCreationRecord(
+                        transaction_id=transaction.id,
+                        creator_node_id=transaction.creator,
+                        original_creation_time=transaction.original_creation_time,
+                        transaction_size=transaction.size,
+                    )
+                )
+                TransactionFactory.transaction_prop(transaction)
 
                 TransactionFactory.produced_tx += 1
 
@@ -181,7 +239,11 @@ class TransactionFactory:
         logger.debug(f"Getting transactions from pool at time {time}")
 
         transactions: List[Transaction] = []
-        size: float = 0
+        # Capacity accounting is exact integer bytes; the returned size stays in MB for
+        # backwards-compatible callers (block.size metadata) but is derived from the
+        # exact byte sum, so it never drifts due to float accumulation.
+        capacity_bytes = size_in_exact_bytes(configuration.block_size)
+        size_bytes: int = 0
 
         while pool:
             tx = pool[0]
@@ -189,16 +251,18 @@ class TransactionFactory:
                 pool.popleft()
                 continue
 
-            if tx.timestamp <= time and size + tx.size <= configuration.block_size:
+            tx_bytes = size_in_exact_bytes(tx.size)
+            if tx.available_at <= time and size_bytes + tx_bytes <= capacity_bytes:
                 transactions.append(tx)
-                size += tx.size
+                size_bytes += tx_bytes
                 pool.popleft()
             else:
                 break
 
         if transactions:
-            logger.debug(f"Selected {len(transactions)} transactions for block, total size: {size}")
-            return transactions, size
+            size_mb = size_bytes / BYTES_PER_MB_EXACT
+            logger.debug(f"Selected {len(transactions)} transactions for block, total size: {size_mb}")
+            return transactions, size_mb
         else:
             logger.debug("No valid transactions found for block.")
             return [], -1

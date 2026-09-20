@@ -131,11 +131,11 @@ class BigFoot(ConsensusProtocol):
         match Parameters.execution["proposer_selection"]:
             case "round_robin":
                 # new miner in a round robin fashion
-                self.miner = self.rounds.round % Parameters.application["Nn"]
+                self.miner = self.node.active_validator_set.proposer_for(self.rounds.round)
             case "hash":
                 # get new miner based on the hash of the last block + the round
                 # (to avoid endlessly waiting for offline nodes)
-                self.miner = (self.node.last_block.id + self.rounds.round) % Parameters.application["Nn"]
+                self.miner = self.node.active_validator_set.proposer_for(self.node.last_block.id + self.rounds.round)
             case _:
                 raise (ValueError(f"No such 'proposer_selection {Parameters.execution['proposer_selection']}"))
 
@@ -271,6 +271,9 @@ class BigFoot(ConsensusProtocol):
 
         self.get_miner()
 
+        if not self.node.is_validator:
+            return
+
         # taking into account block interval for the proposal round timeout
         time += self.node.reconfiguration_state.configuration.block_time
 
@@ -317,6 +320,8 @@ class BigFoot(ConsensusProtocol):
         if event.actor.cp.NAME != BigFoot.NAME:
             print(f"actor at {event.actor.cp.NAME} tried to execute event {event} at BigFoot state")
             return "different_state"
+        if not event.actor.is_validator and event.payload["type"] != "new_block":
+            return "invalid"
         match event.payload["type"]:
             case "propose":
                 ret = state_transition.propose(event.actor.cp, event)

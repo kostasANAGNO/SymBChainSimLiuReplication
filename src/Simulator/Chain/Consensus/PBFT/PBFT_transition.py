@@ -2,6 +2,8 @@ from Parameters import Parameters
 
 from Chain.Network import Network
 from Chain.Consensus.PBFT import PBFT_messages
+from Utils.ComputationalDelay import ComputationalDelay
+from Utils.Instrumentation import BlockProposalRecord, InstrumentationCollector, LocalConsensusDecisionRecord
 
 from typing import TYPE_CHECKING
 
@@ -45,6 +47,22 @@ def propose(state: "PBFT", event: "Event") -> str:
             logger.debug(f"[Node {state.node.id}] PROPOSE: No time left in round for retry")
         return "no transactions - rescheduled"
     else:
+        InstrumentationCollector.record_block_proposal(
+            BlockProposalRecord(
+                block_id=block.id,
+                block_depth=block.depth,
+                proposer=state.node.id,
+                consensus_protocol=state.NAME,
+                round=state.rounds.round,
+                configuration_depth=block.extra_data["configuration_depth"],
+                proposal_time=event.time,
+                block_size=block.size,
+                transaction_count=len(block.transactions),
+                transaction_ids=tuple(transaction.id for transaction in block.transactions),
+                configured_block_size=state.node.reconfiguration_state.configuration.block_size,
+                configured_block_time=state.node.reconfiguration_state.configuration.block_time,
+            )
+        )
         # block created, change state, and broadcast it.
         logger.debug(f"[Node {state.node.id}] PROPOSE: Block created successfully, transitioning from {state.state} to pre_prepared")
         state.state = "pre_prepared"
@@ -84,6 +102,8 @@ def pre_prepare(state: "PBFT", event: "Event") -> str:
     """
     time = event.time
     block = event.payload["block"]
+    if not event.creator.is_validator:
+        return "invalid"
     logger.debug(f"[Node {state.node.id}] PRE_PREPARE: Processing pre_prepare from node {event.creator} for block {block.id} at time {time}, current state: {state.state}")
 
     # validate message: old (invalid), current (continue processing), future (valid, add to backlog)
@@ -95,13 +115,13 @@ def pre_prepare(state: "PBFT", event: "Event") -> str:
         logger.debug(f"[Node {state.node.id}] PRE_PREPARE: Message is for future round - adding to backlog")
         return future
 
-    time += Parameters.execution["msg_val_delay"]
+    time += ComputationalDelay.for_node(Parameters.execution["msg_val_delay"], state.node)
 
     match state.state:
         # if node is a new round state (i.e waiting for a new block to be proposed)
         case "new_round":
             # validate block
-            time += Parameters.execution["block_val_delay"]
+            time += ComputationalDelay.for_node(Parameters.execution["block_val_delay"], state.node)
             if (ret := state.validate_block(block, time)) != "valid":
                 logger.debug(f"[Node {state.node.id}] PRE_PREPARE: Block validation failed: {ret}")
                 return ret
@@ -167,6 +187,8 @@ def prepare(state: "PBFT", event: "Event") -> str:
     """
     time = event.time
     block = event.payload["block"]
+    if not event.creator.is_validator:
+        return "invalid"
     round = state.rounds.round
     logger.debug(f"[Node {state.node.id}] PREPARE: Processing prepare vote from node {event.creator} for block {block.id} at time {time}, current state: {state.state}")
 
@@ -179,7 +201,7 @@ def prepare(state: "PBFT", event: "Event") -> str:
         logger.debug(f"[Node {state.node.id}] PREPARE: Message is for future round, adding to backlog")
         return future
 
-    time += Parameters.execution["msg_val_delay"]
+    time += ComputationalDelay.for_node(Parameters.execution["msg_val_delay"], state.node)
 
     match state.state:
         case "pre_prepared":
@@ -246,6 +268,8 @@ def commit(state: "PBFT", event: "Event") -> str:
     """
     time = event.time
     block = event.payload["block"]
+    if not event.creator.is_validator:
+        return "invalid"
     logger.debug(f"[Node {state.node.id}] COMMIT: Processing commit vote from node {event.creator} for block {block.id} at time {time}, current state: {state.state}")
 
     # validate message: old (invalid), current (continue processing), future (valid, add to backlog)
@@ -256,7 +280,7 @@ def commit(state: "PBFT", event: "Event") -> str:
     if future is not None:
         logger.debug(f"[Node {state.node.id}] COMMIT: Message is for future round, adding to backlog")
         return future
-    time += Parameters.execution["msg_val_delay"]
+    time += ComputationalDelay.for_node(Parameters.execution["msg_val_delay"], state.node)
 
     match state.state:
         case "prepared":
@@ -270,9 +294,22 @@ def commit(state: "PBFT", event: "Event") -> str:
 
             # if we have enough votes
             if state.count_votes("commit") >= Parameters.application["required_messages"]:
+                InstrumentationCollector.record_local_consensus_decision(
+                    LocalConsensusDecisionRecord(
+                        block_id=state.block.id,
+                        node_id=state.node.id,
+                        decision_time=time,
+                        consensus_protocol=state.NAME,
+                        round=state.rounds.round,
+                        configuration_depth=state.block.extra_data["configuration_depth"],
+                        decision_path="pbft_commit",
+                        quorum_size=Parameters.application["required_messages"],
+                        validator_count=state.node.active_validator_set.count,
+                    )
+                )
                 # add block to local blockchain
                 logger.debug(f"[Node {state.node.id}] COMMIT: Sufficient commit votes received! Adding block {block.id} to blockchain")
-                state.node.add_block(state.block, time)
+                state.node.add_block(state.block, time, cause="local_consensus_decision")
 
                 Parameters.simulation["blockchain"] = Parameters.simulation.get("blockchain", dict())
                 if block.id not in Parameters.simulation["blockchain"]:
@@ -327,8 +364,8 @@ def new_block(state: "PBFT", event: "Event") -> str:
 
     logger.debug(f"[Node {state.node.id}] NEW_BLOCK: Processing new block {block.id} from node {event.creator} at {time}, depth: {block.depth}, local depth: {state.node.blockchain[-1].depth}")
 
-    time += Parameters.execution["msg_val_delay"]
-    time += Parameters.execution["block_val_delay"]
+    time += ComputationalDelay.for_node(Parameters.execution["msg_val_delay"], state.node)
+    time += ComputationalDelay.for_node(Parameters.execution["block_val_delay"], state.node)
 
     if block.depth <= state.node.blockchain[-1].depth:
         logger.debug(f"[Node {state.node.id}] NEW_BLOCK: Block {block.id} is old (depth {block.depth} <= local {state.node.blockchain[-1].depth}) - ignoring")
@@ -340,7 +377,7 @@ def new_block(state: "PBFT", event: "Event") -> str:
         return "detected_desync"
 
     logger.debug(f"[Node {state.node.id}] NEW_BLOCK: Adding block {block.id} to local blockchain and starting new round {block.extra_data['round'] + 1}")
-    state.node.add_block(block.copy(), time)
+    state.node.add_block(block.copy(), time, cause="finalized_block_announcement")
     state.start(time, block.extra_data["round"] + 1)
 
     # we are now in a new round - check the backlog for any missed round messages from early nodes

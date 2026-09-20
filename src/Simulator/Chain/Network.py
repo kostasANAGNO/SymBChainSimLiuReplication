@@ -63,7 +63,17 @@ class Network:
             creator (Node): The node creating the message.
             event (MessageEvent): The message event to send.
         """
-        if Parameters.network["gossip"]:
+        if event.recipient_scope == "validators" and creator.active_validator_set.count < len(Network.nodes):
+            # The first static N/K model uses direct validator delivery. This
+            # prevents observers from receiving or relaying consensus traffic
+            # through the all-node gossip topology.
+            if Parameters.network["gossip"]:
+                Network.received[creator].add(event.id)
+            validators = [node for node in Network.nodes if node.is_validator]
+            Network._broadcast(creator, event, validators)
+        elif Parameters.network["gossip"]:
+            # K=N deliberately follows the exact legacy path.
+            event.recipient_scope = "all"
             Network._multicast(creator, event)
         else:
             Network._broadcast(creator, event)
@@ -84,14 +94,14 @@ class Network:
             Network._message(node, n, msg)
 
     @staticmethod
-    def _broadcast(node: "Node", event: Event) -> None:
+    def _broadcast(node: "Node", event: Event, recipients: Optional[List["Node"]] = None) -> None:
         """Sends a message to all nodes in the network.
 
         Args:
             node (Node): The sending node.
             event (MessageEvent): The message to send.
         """
-        for n in Network.nodes:
+        for n in Network.nodes if recipients is None else recipients:
             if n != node:
                 msg = MessageEvent.from_Event(event, n)
                 Network._message(node, n, msg)
@@ -123,7 +133,16 @@ class Network:
         Returns:
             str: 'process' if message should be processed, otherwise reason for not processing.
         """
+        if getattr(msg, "recipient_scope", None) == "direct":
+            return "process"
+
         if not Parameters.network["gossip"]:
+            return "process"
+
+        if msg.recipient_scope == "validators":
+            if msg.id in Network.received[node]:
+                return "previously_gossiped"
+            Network.received[node].add(msg.id)
             return "process"
 
         if msg.id in Network.received[node]:

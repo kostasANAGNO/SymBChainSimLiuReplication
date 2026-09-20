@@ -2,6 +2,8 @@ from Parameters import Parameters
 
 from Chain.Network import Network
 from Chain.Consensus.Tendermint import TM_messages as messages
+from Utils.ComputationalDelay import ComputationalDelay
+from Utils.Instrumentation import BlockProposalRecord, InstrumentationCollector, LocalConsensusDecisionRecord
 
 from typing import TYPE_CHECKING
 
@@ -43,6 +45,22 @@ def propose(state: "Tendermint", event: "Event") -> str:
         else:
             logger.debug(f"[Node {state.node.id}] PROPOSE: No time left in round for retry")
     else:
+        InstrumentationCollector.record_block_proposal(
+            BlockProposalRecord(
+                block_id=block.id,
+                block_depth=block.depth,
+                proposer=state.node.id,
+                consensus_protocol=state.NAME,
+                round=state.rounds.round,
+                configuration_depth=block.extra_data["configuration_depth"],
+                proposal_time=event.time,
+                block_size=block.size,
+                transaction_count=len(block.transactions),
+                transaction_ids=tuple(transaction.id for transaction in block.transactions),
+                configured_block_size=state.node.reconfiguration_state.configuration.block_size,
+                configured_block_time=state.node.reconfiguration_state.configuration.block_time,
+            )
+        )
         time = creation_time
 
         # block created, change state, and broadcast it.
@@ -79,6 +97,8 @@ def pre_prepare(state: "Tendermint", event: "Event") -> str:
     """
     time = event.time
     block = event.payload["block"]
+    if not event.creator.is_validator:
+        return "invalid"
     logger.debug(f"[Node {state.node.id}] PRE_PREPARE: Processing pre_prepare from node {event.creator} for block {block.id} at time {time}, current state: {state.state}")
 
     # validate message: old (invalid), current (continue processing), future (valid, add to backlog)
@@ -90,13 +110,13 @@ def pre_prepare(state: "Tendermint", event: "Event") -> str:
         logger.debug(f"[Node {state.node.id}] PRE_PREPARE: Message is for future round - adding to backlog")
         return future
 
-    time += Parameters.execution["msg_val_delay"]
+    time += ComputationalDelay.for_node(Parameters.execution["msg_val_delay"], state.node)
 
     match state.state:
         # if node is a new round state (i.e waiting for a new block to be proposed)
         case "new_round":
             # validate block
-            time += Parameters.execution["block_val_delay"]
+            time += ComputationalDelay.for_node(Parameters.execution["block_val_delay"], state.node)
 
             if (ret := state.validate_block(block, time)) != "valid":
                 logger.debug(f"[Node {state.node.id}] PRE_PREPARE: Block validation failed: {ret}")
@@ -156,6 +176,8 @@ def prepare(state: "Tendermint", event: "Event") -> str:
     """
     time = event.time
     block = state.block
+    if not event.creator.is_validator:
+        return "invalid"
     logger.debug(f"[Node {state.node.id}] PREPARE: Processing prepare vote from node {event.creator} for block {block.id if block else 'None'} at time {time}, current state: {state.state}")
 
     # validate message: old (invalid), current (continue processing), future (valid, add to backlog)
@@ -166,7 +188,7 @@ def prepare(state: "Tendermint", event: "Event") -> str:
     if future is not None:
         logger.debug(f"[Node {state.node.id}] PREPARE: Message is for future round, adding to backlog")
         return future
-    time += Parameters.execution["msg_val_delay"]
+    time += ComputationalDelay.for_node(Parameters.execution["msg_val_delay"], state.node)
 
     match state.state:
         case "pre_prepared":
@@ -224,6 +246,8 @@ def commit(state: "Tendermint", event: "Event") -> str:
         str: Result of processing ('new_state', 'handled', 'invalid', 'backlog').
     """
     time = event.time
+    if not event.creator.is_validator:
+        return "invalid"
 
     # validate message: old (invalid), current (continue processing), future (valid, add to backlog)
     valid, future = state.validate_message(event)
@@ -233,7 +257,7 @@ def commit(state: "Tendermint", event: "Event") -> str:
     if future is not None:
         logger.debug(f"[Node {state.node.id}] COMMIT: Message is for future round, adding to backlog")
         return future
-    time += Parameters.execution["msg_val_delay"]
+    time += ComputationalDelay.for_node(Parameters.execution["msg_val_delay"], state.node)
 
     match state.state:
         case "prepared":
@@ -244,7 +268,20 @@ def commit(state: "Tendermint", event: "Event") -> str:
             current_votes = state.count_votes("commit")
             logger.debug(f"[Node {state.node.id}] COMMIT: Current commit votes: {current_votes}, required: {Parameters.application['required_messages']}")
             if state.count_votes("commit") >= Parameters.application["required_messages"]:
-                state.node.add_block(state.block, time)  # add block to BC
+                InstrumentationCollector.record_local_consensus_decision(
+                    LocalConsensusDecisionRecord(
+                        block_id=state.block.id,
+                        node_id=state.node.id,
+                        decision_time=time,
+                        consensus_protocol=state.NAME,
+                        round=state.rounds.round,
+                        configuration_depth=state.block.extra_data["configuration_depth"],
+                        decision_path="tendermint_commit",
+                        quorum_size=Parameters.application["required_messages"],
+                        validator_count=state.node.active_validator_set.count,
+                    )
+                )
+                state.node.add_block(state.block, time, cause="local_consensus_decision")  # add block to BC
 
                 if state.node.id == state.miner:
                     logger.debug(f"[Node {state.node.id}] COMMIT: As miner, broadcasting new block {state.block.id}")
@@ -284,8 +321,8 @@ def new_block(state: "Tendermint", event: "Event") -> str:
     time = event.time
     logger.debug(f"[Node {state.node.id}] NEW_BLOCK: Processing new block {block.id} from node {event.creator} at {time}, depth: {block.depth}, local depth: {state.node.blockchain[-1].depth}")
 
-    time += Parameters.execution["msg_val_delay"]
-    time += Parameters.execution["block_val_delay"]
+    time += ComputationalDelay.for_node(Parameters.execution["msg_val_delay"], state.node)
+    time += ComputationalDelay.for_node(Parameters.execution["block_val_delay"], state.node)
 
     if block.depth <= state.node.blockchain[-1].depth:
         logger.debug(f"[Node {state.node.id}] NEW_BLOCK: Block {block.id} is old (depth {block.depth} <= local {state.node.blockchain[-1].depth}) - ignoring")
@@ -297,7 +334,7 @@ def new_block(state: "Tendermint", event: "Event") -> str:
         return "detected_desync"
 
     logger.debug(f"[Node {state.node.id}] NEW_BLOCK: Adding block {block.id} to local blockchain and starting new round {event.payload['round'] + 1}")
-    state.node.add_block(block.copy(), time)
+    state.node.add_block(block.copy(), time, cause="finalized_block_announcement")
     state.start(time, event.payload["round"] + 1)
 
     return "new_state"  # check backlog for any missed messages from early nodes

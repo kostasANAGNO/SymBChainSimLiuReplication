@@ -43,7 +43,7 @@ def broadcast_pre_prepare(state: "BigFoot", time: float, block: "Block") -> None
         "round": state.rounds.round,
         "CP": state.NAME,
     }
-    Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event)
+    Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event, recipient_scope="validators")
 
 
 def broadcast_prepare(state: "BigFoot", time: float, block: "Block") -> None:
@@ -61,7 +61,7 @@ def broadcast_prepare(state: "BigFoot", time: float, block: "Block") -> None:
         "round": state.rounds.round,
         "CP": state.NAME,
     }
-    Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event)
+    Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event, recipient_scope="validators")
 
 
 def broadcast_commit(state: "BigFoot", time: float, block: "Block") -> None:
@@ -79,7 +79,7 @@ def broadcast_commit(state: "BigFoot", time: float, block: "Block") -> None:
         "round": state.rounds.round,
         "CP": state.NAME,
     }
-    Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event)
+    Scheduler.schedule_broadcast_message(state.node, time, payload, state.handle_event, recipient_scope="validators")
 
 
 def broadcast_new_block(state: "BigFoot", time: float, block: "Block") -> None:

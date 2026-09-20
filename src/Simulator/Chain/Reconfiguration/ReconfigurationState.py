@@ -187,6 +187,11 @@ class ReconfigurationState:
             return "handled"
 
         self.add_configuration_block(block, time)
+        # Validators apply at their existing safe consensus boundaries. Passive
+        # observers have no timeout/round work, so this receive point is their
+        # safe opportunity to follow protocol changes before the next new_block.
+        if not self.node.is_validator:
+            self.node.update(time)
         logger.debug(f"Node {self.node.id}: New configuration block {block.id} applied at depth {block.depth}.")
         return "new_state"
 

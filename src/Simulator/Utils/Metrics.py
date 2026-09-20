@@ -65,7 +65,8 @@ class Metrics:
         Returns:
             int: Minimum number of blocks across all nodes.
         """
-        return min([n.blockchain_length() for n in sim.nodes])
+        validators = [node for node in sim.nodes if node.is_validator]
+        return min([node.blockchain_length() for node in validators])
 
     @staticmethod
     def measure_all(sim: "Simulation", start_from: float = 0) -> None:
@@ -239,7 +240,7 @@ class Metrics:
         if not blocks:
             return -1
 
-        nodes = [node.id for node in sim.nodes]
+        nodes = [node.id for node in sim.nodes if node.is_validator]
 
         block_distribution = {x: 0 for x in nodes}
 

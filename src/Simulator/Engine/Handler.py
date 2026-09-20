@@ -47,6 +47,37 @@ def handle_event(event: Event, checking_backlog: bool = False) -> str:
         logger.debug(f"[Node: {event.actor.id}] is offline - skipping exectuion")
         return "dead_node"
 
+    liu_context = getattr(event, "liu_context", None)
+    current_protocol = getattr(event.actor, "cp", None)
+    current_epoch = getattr(current_protocol, "epoch_context", None)
+    if liu_context is not None and current_epoch is not None and (
+        liu_context.epoch_id != current_epoch.epoch_id
+        or liu_context.epoch_hash != current_epoch.epoch_hash
+    ):
+        from Utils.LiuRuntimeInstrumentation import EpochLifecycleRecord, LiuRuntimeInstrumentationCollector
+
+        epoch = current_epoch.epoch_configuration
+        LiuRuntimeInstrumentationCollector.epoch_lifecycle.append(
+            EpochLifecycleRecord(
+                "stale_old_epoch_event_rejected",
+                event.time,
+                epoch.epoch_id,
+                epoch.activation_height or event.actor.last_block.depth + 1,
+                current_epoch.epoch_hash,
+                epoch.previous_epoch_hash,
+                event.actor.id,
+                epoch.validator_set.ids,
+                epoch.consensus_protocol.value,
+                epoch.block_size_mb,
+                epoch.block_interval_s,
+                detail=(
+                    f"event_epoch={liu_context.epoch_id};event_hash={liu_context.epoch_hash};"
+                    f"message_type={event.payload.get('type')}"
+                ),
+            )
+        )
+        return "invalid"
+
     # if this event is CP specific and the CP of the event does not match the current CP of the node - old/old message
     if "CP" in event.payload and (event.actor.cp is not None and event.payload["CP"] != event.actor.cp.NAME):
         logger.debug(f"[Node: {event.actor.id}] uses {event.actor.cp.NAME} but event is for protocol {event.payload['CP']}...")
