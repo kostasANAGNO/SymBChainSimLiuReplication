@@ -205,8 +205,9 @@ def run_single(
 
     if verbose:
         _sep("CURRENT STATE  S(t)")
-        print(f"  Transaction size χ : {CHI_BYTES} B              (Table I, PAPER_EXACT)")
-        print(f"  Nodes N            : {N}   Validators K: {K}    (OUR_RECONSTRUCTION)")
+        print(f"  Transaction size χ : {CHI_BYTES} B")
+        print(f"  Nodes N            : {N}")
+        print(f"  Validators K       : {K}")
         print(f"  Link rate mean     : {mean_r:.1f} Mbps")
         print(f"  Link rate min      : {min_r:.1f} Mbps")
         print(f"  Link rate max      : {max_r:.1f} Mbps")
@@ -264,6 +265,11 @@ def run_single(
         print(f"  Link rate min      : {obs_next['link_rate_min_mbps']:.1f} Mbps")
         print(f"  Link rate max      : {obs_next['link_rate_max_mbps']:.1f} Mbps")
         print(f"  Link state hash    : {obs_next['link_state_hash'][:16]}...")
+        print()
+        _sep("EXPERIMENT CONFIGURATION")
+        print("  Objective and constraints follow Liu et al. (2019), TII.")
+        print("  N=30 / K=28 and dynamic network parameters are settings")
+        print("  used in the reduced validation environment.")
         print()
 
     return {
