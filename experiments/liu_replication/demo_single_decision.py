@@ -215,11 +215,11 @@ def run_single(
         cap_mean   = sum(CAPABILITIES) / len(CAPABILITIES)
         print(f"  Stakes (mean)      : {stake_mean:.1f} token  range [{min(STAKES):.0f},{max(STAKES):.0f}]")
         print(f"  Capabilities (mean): {cap_mean:.1f} GHz   range [{min(CAPABILITIES):.0f},{max(CAPABILITIES):.0f}]")
-        print(f"  State encoding dim : {state_enc.dim}")
 
-        _sep("DQN DECISION  A(t)   [ep400 checkpoint, ε=0 greedy]")
+        _PROTO_LABELS = {"LIU_QUORUM": "Quorum", "LIU_PBFT": "PBFT", "LIU_ZYZZYVA": "Zyzzyva"}
+        _sep("DQN DECISION  A(t)   [Trained DQN policy]")
         print(f"  Action ID          : {chosen['action_id']} / 3915")
-        print(f"  Protocol δ         : {chosen['protocol']}")
+        print(f"  Protocol δ         : {_PROTO_LABELS.get(chosen['protocol'], chosen['protocol'])}")
         print(f"  Block size S_B     : {chosen['block_size_mb']:.1f} MB")
         print(f"  Block interval T_I : {chosen['block_interval_s']:.1f} s")
         n_validators = len(chosen["validator_ids"])
@@ -227,7 +227,7 @@ def run_single(
         print(f"  Validators (K={n_validators}) : {v_sample} ... (first 6 shown)")
         omega_val = _omega(chosen["block_size_mb"], chosen["block_interval_s"])
         print(f"  Nominal Ω          : {omega_val:,.0f} TPS   (= floor(S_B/χ)/T_I)")
-        print(f"  Predicted Q-value  : {best_q:.4f}  (normalised by {REWARD_SCALE:,.0f})")
+        print(f"  Estimated Q-value  : {best_q:.4f}  (normalised by {REWARD_SCALE:,.0f})")
 
         _sep("SYMBCHAINSIM EXECUTION")
         print("  Running DES consensus simulation ... ", end="", flush=True)
@@ -244,7 +244,10 @@ def run_single(
         print(f"  C2 deadline (ω·T_I): {REF_PARAMS.finality_multiplier_omega * chosen['block_interval_s'] * 1000:.0f} ms")
         print(f"  Stake Gini G(Υ)    : {result.stake_gini:.4f}  (threshold η_s={REF_PARAMS.stake_gini_threshold_eta_s})")
         print(f"  Geo Gini G(λ)      : {result.geo_gini:.4f}  (threshold η_l={REF_PARAMS.geographic_gini_threshold_eta_l})")
-        print(f"  Failure reason     : {result.failure_reason.value}")
+        _FINALITY_LABELS = {"FINALIZED_WITHIN_C2_LIMIT": "Finalized within C2 limit"}
+        finality_str = _FINALITY_LABELS.get(result.failure_reason.value,
+                                             result.failure_reason.value.replace("_", " ").title())
+        print(f"  Finality status    : {finality_str}")
 
         _sep("CONSTRAINT CHECK")
         c1 = "✓ PASS" if result.des_c1 else "✗ FAIL"
@@ -264,7 +267,6 @@ def run_single(
         print(f"  Link rate mean     : {obs_next['link_rate_mean_mbps']:.1f} Mbps")
         print(f"  Link rate min      : {obs_next['link_rate_min_mbps']:.1f} Mbps")
         print(f"  Link rate max      : {obs_next['link_rate_max_mbps']:.1f} Mbps")
-        print(f"  Link state hash    : {obs_next['link_state_hash'][:16]}...")
         print()
         _sep("EXPERIMENT CONFIGURATION")
         print("  Objective and constraints follow Liu et al. (2019), TII.")
