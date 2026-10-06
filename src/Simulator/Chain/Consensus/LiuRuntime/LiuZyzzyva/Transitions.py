@@ -21,7 +21,6 @@ from Chain.Consensus.LiuRuntime.Processing.ProcessingWork import LiuProcessingWo
 from Utils.LiuRuntimeInstrumentation import (
     LiuRuntimeInstrumentationCollector,
     ProtocolCertificateRecord,
-    ProtocolFailureRecord,
     ProtocolFinalityRecord,
 )
 
@@ -62,23 +61,6 @@ def _reserve_processing(
         liu_processing_reservation=reservation,
         liu_processing_work=work,
         **metadata,
-    )
-
-
-def _record_failure(protocol, event, reason: str) -> None:
-    identity = event.liu_context.block_identity
-    LiuRuntimeInstrumentationCollector.protocol_failures.append(
-        ProtocolFailureRecord(
-            protocol.NAME,
-            identity.epoch_id,
-            identity.height,
-            event.liu_context.view,
-            protocol.node.id,
-            LiuZyzzyvaPhase.PENDING_RECOVERY.value,
-            reason,
-            event.time,
-            identity.block_digest,
-        )
     )
 
 
@@ -142,7 +124,6 @@ def _pending_recovery(protocol, event, reason: str) -> str:
         state.failure_reason = reason
     elif reason not in state.failure_reason:
         state.failure_reason = f"{state.failure_reason};{reason}"
-    _record_failure(protocol, event, reason)
     if state.phase is not LiuZyzzyvaPhase.PENDING_RECOVERY:
         previous = state.phase
         state.phase = LiuZyzzyvaPhase.PENDING_RECOVERY
@@ -432,7 +413,7 @@ def receive_speculative_reply(protocol, event) -> str:
     state.phase = LiuZyzzyvaPhase.FAST_FINALIZED
     state.fast_finalized_height = state.height
     protocol.record_phase(previous, state.phase, event.time, event.liu_context.logical_message_id, identity)
-    protocol.node.add_block(state.block.copy(), event.time, cause="protocol_finality")
+    protocol.node.add_block(state.block.copy(), event.time)
     for receiver in protocol.transport.nodes:
         if receiver.id != protocol.node.id:
             Messages.send_finalized_block(protocol, receiver.id, event.time, state.block, identity, certificate)
@@ -455,7 +436,6 @@ def fast_timeout(protocol, event) -> str:
     ):
         return "handled"
     if state.phase is LiuZyzzyvaPhase.RECOVERY_CERTIFICATE_CREATED:
-        _record_failure(protocol, event, "recovery_local_commit_timeout")
         return "handled"
     replies = state.speculative_replies.get(state.block_identity.block_digest, {})
     missing = tuple(sorted(set(state.replica_ids) - set(replies)))
@@ -631,7 +611,7 @@ def receive_local_commit(protocol, event) -> str:
     state.phase = LiuZyzzyvaPhase.RECOVERY_FINALIZED
     state.recovery_finalized_height = state.height
     protocol.record_phase(previous, state.phase, event.time, event.liu_context.logical_message_id, identity)
-    protocol.node.add_block(state.block.copy(), event.time, cause="protocol_finality")
+    protocol.node.add_block(state.block.copy(), event.time)
     for receiver in protocol.transport.nodes:
         if receiver.id != protocol.node.id:
             Messages.send_finalized_block(
@@ -1151,6 +1131,6 @@ def receive_finalized_block(protocol, event) -> str:
         return "invalid"
     if state.local_committed_height == identity.height and state.local_commit_digest != identity.block_digest:
         return "invalid"
-    protocol.node.add_block(block.copy(), event.time, cause="certified_finalized_block_announcement")
+    protocol.node.add_block(block.copy(), event.time)
     protocol.start(event.time, 0)
     return "new_state"

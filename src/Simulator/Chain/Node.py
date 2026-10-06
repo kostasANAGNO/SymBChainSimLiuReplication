@@ -11,7 +11,6 @@ from Chain.Reconfiguration.ReconfigurationState import ReconfigurationState
 from Engine.Scheduler import Scheduler
 
 from Utils import Tools
-from Utils.Instrumentation import BlockObservationRecord, InstrumentationCollector
 
 from types import SimpleNamespace
 from collections import deque
@@ -251,7 +250,7 @@ class Node:
             logger.debug(f"Node {self.id}: Rejoining latest configuration after resurrection at time {time}.")
             self.join_latest_conf(time)
 
-    def add_block(self, block: "Block", time: float, update_time_added: bool = True, cause: str = "local_consensus_decision") -> None:
+    def add_block(self, block: "Block", time: float, update_time_added: bool = True) -> None:
         """
         Adds 'block' to blockchain at time 'time'.
         Removes included transactions from the memory pool
@@ -262,19 +261,6 @@ class Node:
 
         self.blockchain.append(block)
         TransactionFactory.mark_transactions_as_processed(block, self.pool)
-
-        InstrumentationCollector.record_block_observation(
-            BlockObservationRecord(
-                block_id=block.id,
-                block_depth=block.depth,
-                node_id=self.id,
-                observation_time=block.time_added,
-                consensus_protocol=block.consensus,
-                round=block.extra_data["round"],
-                configuration_depth=block.extra_data["configuration_depth"],
-                cause=cause,
-            )
-        )
 
     def add_event(self, event: "Event") -> None:
         """Adds an event to the event queue (if the node is online)"""

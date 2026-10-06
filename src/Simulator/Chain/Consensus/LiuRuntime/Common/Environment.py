@@ -17,14 +17,9 @@ from Chain.Consensus.LiuRuntime.Common.RuntimeEvaluation import (
 from Chain.Consensus.LiuRuntime.Common.StateBuilder import LiuRuntimeStateBuildResult
 from Chain.Consensus.LiuRuntime.Common.StateEvolution import LiuRuntimeStateEvolution
 from Liu.Action import LiuAction
-from Liu.AnalyticalConsensus import AnalyticalConsensusResult
 from Liu.Serialization import CanonicalSerializable
 from Liu.State import LiuState
 from Liu.Validation import require_finite_number, require_integer
-from Utils.LiuEnvironmentInstrumentation import (
-    LiuEnvironmentEventRecord,
-    LiuEnvironmentInstrumentationCollector,
-)
 from Utils.Instrumentation import InstrumentationCollector
 from Utils.LiuRuntimeInstrumentation import LiuRuntimeInstrumentationCollector
 from Utils.LiuRuntimeInstrumentation import ProtocolFinalityRecord
@@ -138,14 +133,6 @@ class LiuEnvironmentRuntimeAdapter(ABC):
     ) -> LiuEpochExecutionOutcome:
         """Drive existing SymBChainSim events until one height finishes or a limit is reached."""
 
-    @abstractmethod
-    def analytical_result(
-        self,
-        action: LiuAction,
-        measurement: LiuRuntimeExecutionMeasurement,
-    ) -> AnalyticalConsensusResult:
-        """Return the existing analytical model's reference for this executed action."""
-
     def activate(self) -> None:
         """Restore adapter-owned compatibility globals, if its simulator requires them."""
 
@@ -163,13 +150,12 @@ class CallbackLiuEnvironmentRuntimeAdapter(LiuEnvironmentRuntimeAdapter):
         current_time: Callable[[], float],
         current_finalized_height: Callable[[], int],
         execute_one_decision_epoch: Callable[[int, float | None], LiuEpochExecutionOutcome],
-        analytical_result: Callable[[LiuAction, LiuRuntimeExecutionMeasurement], AnalyticalConsensusResult],
         activate: Callable[[], None] | None = None,
         deactivate: Callable[[], None] | None = None,
     ) -> None:
         if not isinstance(state_evolution, LiuRuntimeStateEvolution):
             raise ValueError("state_evolution must be a LiuRuntimeStateEvolution")
-        callbacks = (current_time, current_finalized_height, execute_one_decision_epoch, analytical_result)
+        callbacks = (current_time, current_finalized_height, execute_one_decision_epoch)
         if not all(callable(callback) for callback in callbacks):
             raise ValueError("runtime adapter providers must be callable")
         self._state_evolution = state_evolution
@@ -177,7 +163,6 @@ class CallbackLiuEnvironmentRuntimeAdapter(LiuEnvironmentRuntimeAdapter):
         self._current_time_provider = current_time
         self._height_provider = current_finalized_height
         self._execution_provider = execute_one_decision_epoch
-        self._analytical_provider = analytical_result
         self._activate_hook = activate
         self._deactivate_hook = deactivate
 
@@ -199,9 +184,6 @@ class CallbackLiuEnvironmentRuntimeAdapter(LiuEnvironmentRuntimeAdapter):
 
     def execute_one_decision_epoch(self, target_height: int, simulation_deadline: float | None):
         return self._execution_provider(target_height, simulation_deadline)
-
-    def analytical_result(self, action: LiuAction, measurement: LiuRuntimeExecutionMeasurement):
-        return self._analytical_provider(action, measurement)
 
     def activate(self) -> None:
         if self._activate_hook is not None:
@@ -285,7 +267,6 @@ class LiuRuntimeEnvironment:
         self.config = config
         self.runtime_factory = runtime_factory
         self.evaluator = evaluator or LiuRuntimeConstraintEvaluator()
-        self.instrumentation = LiuEnvironmentInstrumentationCollector()
         self.candidate_rng = random.Random(config.candidate_seed)
         self._runtime: LiuEnvironmentRuntimeAdapter | None = None
         self._current_state: LiuRuntimeStateBuildResult | None = None
@@ -319,7 +300,6 @@ class LiuRuntimeEnvironment:
             raise ValueError("runtime_factory must return a LiuEnvironmentRuntimeAdapter")
         self._runtime = runtime
         runtime.activate()
-        self.instrumentation.reset()
         self.candidate_rng = random.Random(self.config.candidate_seed)
         self._decision_steps = 0
         self._done = False
@@ -330,9 +310,6 @@ class LiuRuntimeEnvironment:
         self._raw_instrumentation_snapshot = InstrumentationCollector.snapshot()
         self._liu_instrumentation_snapshot = LiuRuntimeInstrumentationCollector.snapshot()
         runtime.deactivate()
-        self.instrumentation.append(
-            LiuEnvironmentEventRecord("episode_reset", 0, 0, initial_time, self._current_state.state_hash)
-        )
         return LiuResetResult(
             self._current_state.state,
             self._current_state.state_hash,
@@ -369,16 +346,6 @@ class LiuRuntimeEnvironment:
         start_height = require_integer(runtime.current_finalized_height, "runtime.current_finalized_height")
         target_height = start_height + 1
         action_hash = action.deterministic_hash()
-        self.instrumentation.append(
-            LiuEnvironmentEventRecord(
-                "decision_step_started",
-                0,
-                self._decision_steps,
-                start_time,
-                state_t.state_hash,
-                action_hash,
-            )
-        )
         runtime.state_evolution.begin_epoch(
             action,
             current_finalized_height=start_height,
@@ -401,7 +368,6 @@ class LiuRuntimeEnvironment:
             finality_records=outcome.finality_records,
             execution_failure_reason=reason,
         )
-        analytical = runtime.analytical_result(action, measurement)
         evaluation = self.evaluator.evaluate(
             LiuRuntimeConstraintInput(
                 measurement.epoch_id,
@@ -410,7 +376,6 @@ class LiuRuntimeEnvironment:
                 runtime.state_evolution.action_applicator.current_epoch.threat_scenario,
                 runtime.state_evolution.state_builder.geographic_model,
                 measurement,
-                analytical,
                 self.config.stake_gini_threshold,
                 self.config.geographic_gini_threshold,
                 self.config.finality_multiplier_omega,
@@ -443,33 +408,6 @@ class LiuRuntimeEnvironment:
         self._liu_instrumentation_snapshot = LiuRuntimeInstrumentationCollector.snapshot()
         runtime.deactivate()
         evaluation_hash = evaluation.deterministic_hash()
-        self.instrumentation.append(
-            LiuEnvironmentEventRecord(
-                "decision_step_completed",
-                0,
-                self._decision_steps - 1,
-                outcome.end_time,
-                state_t.state_hash,
-                action_hash,
-                evaluation_hash,
-                reward_result.status.value,
-                reason,
-            )
-        )
-        if self._done:
-            self.instrumentation.append(
-                LiuEnvironmentEventRecord(
-                    "episode_truncated" if truncated and not terminated else "episode_terminated",
-                    0,
-                    self._decision_steps - 1,
-                    outcome.end_time,
-                    state_t.state_hash,
-                    action_hash,
-                    evaluation_hash,
-                    reward_result.status.value,
-                    reason,
-                )
-            )
         diagnostics = (
             ("decision_step", self._decision_steps - 1),
             ("epoch_id", measurement.epoch_id),
@@ -492,18 +430,5 @@ class LiuRuntimeEnvironment:
         )
 
     def screen_candidate(self, generator, action: LiuAction):
-        """Convenience instrumentation hook; step() never calls or enforces it."""
-        result = generator.screen(action, self.current_state.state)
-        self.instrumentation.append(
-            LiuEnvironmentEventRecord(
-                "candidate_screened",
-                0,
-                self._decision_steps,
-                self.runtime.current_time,
-                self.current_state.state_hash,
-                action.deterministic_hash(),
-                status="pre_execution_feasible" if result.pre_execution_feasible else "pre_execution_infeasible",
-                detail="C3=runtime_required",
-            )
-        )
-        return result
+        """Convenience screening hook; step() never calls or enforces it."""
+        return generator.screen(action, self.current_state.state)

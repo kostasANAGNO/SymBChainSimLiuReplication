@@ -1,6 +1,6 @@
 """The paper's simplified, leaderless LiuQuorum analytical abstraction."""
 
-from Liu.AnalyticalConsensus import AnalyticalConsensusInput, AnalyticalConsensusModel, AnalyticalConsensusResult
+from PaperReference.AnalyticalConsensus import AnalyticalConsensusInput, AnalyticalConsensusModel, AnalyticalConsensusResult
 from Liu.Protocol import LiuConsensusProtocol
 
 

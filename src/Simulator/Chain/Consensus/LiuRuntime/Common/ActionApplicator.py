@@ -11,7 +11,7 @@ from Chain.ValidatorSet import ValidatorSet
 from Liu.Action import LiuAction
 from Liu.EpochConfiguration import EpochConfiguration
 from Liu.Serialization import CanonicalSerializable
-from Utils.LiuRuntimeInstrumentation import EpochLifecycleRecord, LiuRuntimeInstrumentationCollector
+from Utils.LiuRuntimeInstrumentation import LiuRuntimeInstrumentationCollector
 
 
 _RUNTIME_NAMES = {
@@ -74,26 +74,6 @@ class LiuRuntimeActionApplicator:
         if epoch_hash is not None and context.epoch_hash != epoch_hash:
             raise ValueError("historical epoch hash does not match the immutable snapshot")
         return context
-
-    def _record(self, event_type: str, time: float, context, action_hash=None, node_id=None, detail=None) -> None:
-        epoch = context.epoch_configuration
-        LiuRuntimeInstrumentationCollector.epoch_lifecycle.append(
-            EpochLifecycleRecord(
-                event_type,
-                time,
-                epoch.epoch_id,
-                epoch.activation_height or 1,
-                context.epoch_hash,
-                epoch.previous_epoch_hash,
-                node_id,
-                epoch.validator_set.ids,
-                epoch.consensus_protocol.value,
-                epoch.block_size_mb,
-                epoch.block_interval_s,
-                action_hash,
-                detail,
-            )
-        )
 
     def _validate_boundary(self, current_finalized_height: int) -> tuple[str, object]:
         if isinstance(current_finalized_height, bool) or not isinstance(current_finalized_height, int):
@@ -222,20 +202,6 @@ class LiuRuntimeActionApplicator:
         self._activation_heights[epoch.activation_height] = epoch.epoch_id
         self._pending_sync = set(pending)
         action_hash = action.deterministic_hash()
-        self._record("epoch_transition", time, context, action_hash, detail=f"from_epoch={old.epoch_id}")
-        self._record("action_applied", time, context, action_hash)
-        for node_id in added:
-            self._record("validator_added", time, context, action_hash, node_id)
-        for node_id in removed:
-            self._record("validator_removed", time, context, action_hash, node_id)
-        if old.consensus_protocol is not epoch.consensus_protocol:
-            self._record("protocol_switched", time, context, action_hash, detail=f"from={old.consensus_protocol.value}")
-        if old.block_size_mb != epoch.block_size_mb:
-            self._record("block_size_changed", time, context, action_hash, detail=f"from={old.block_size_mb}")
-        if old.block_interval_s != epoch.block_interval_s:
-            self._record("block_interval_changed", time, context, action_hash, detail=f"from={old.block_interval_s}")
-        for node_id in pending:
-            self._record("validator_sync_started", time, context, action_hash, node_id)
         return LiuEpochActivationResult(epoch, context, action_hash, added, removed, pending, time)
 
     def complete_validator_sync(self, node_id: int, source_node_id: int, time: float) -> None:
@@ -254,11 +220,10 @@ class LiuRuntimeActionApplicator:
             if local.id != source.blockchain[depth].id:
                 raise ValueError("validator has a conflicting chain prefix")
         for block in source.blockchain[len(node.blockchain) : target_depth + 1]:
-            node.add_block(block.copy(), time, cause="synchronization")
+            node.add_block(block.copy(), time)
         if node.last_block.depth != target_depth or parent_digest(node.last_block) != parent_digest(source.blockchain[target_depth]):
             raise ValueError("validator synchronization did not reach the canonical activation parent")
         node.state.synced = True
         node.activate_liu_epoch(self.current_epoch.epoch_configuration.validator_set, self.current_epoch.epoch_id, True)
         node.cp.init(time, 0)
         self._pending_sync.remove(node_id)
-        self._record("validator_sync_completed", time, self.current_epoch, node_id=node_id, detail=f"source={source_node_id}")

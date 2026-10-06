@@ -1,6 +1,6 @@
 """Liu Appendix B PBFT performance abstraction, independent of runtime PBFT."""
 
-from Liu.AnalyticalConsensus import AnalyticalConsensusInput, AnalyticalConsensusModel, AnalyticalConsensusResult
+from PaperReference.AnalyticalConsensus import AnalyticalConsensusInput, AnalyticalConsensusModel, AnalyticalConsensusResult
 from Liu.Protocol import LiuConsensusProtocol
 
 

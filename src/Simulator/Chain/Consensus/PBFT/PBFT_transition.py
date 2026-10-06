@@ -3,7 +3,6 @@ from Parameters import Parameters
 from Chain.Network import Network
 from Chain.Consensus.PBFT import PBFT_messages
 from Utils.ComputationalDelay import ComputationalDelay
-from Utils.Instrumentation import BlockProposalRecord, InstrumentationCollector, LocalConsensusDecisionRecord
 
 from typing import TYPE_CHECKING
 
@@ -47,22 +46,6 @@ def propose(state: "PBFT", event: "Event") -> str:
             logger.debug(f"[Node {state.node.id}] PROPOSE: No time left in round for retry")
         return "no transactions - rescheduled"
     else:
-        InstrumentationCollector.record_block_proposal(
-            BlockProposalRecord(
-                block_id=block.id,
-                block_depth=block.depth,
-                proposer=state.node.id,
-                consensus_protocol=state.NAME,
-                round=state.rounds.round,
-                configuration_depth=block.extra_data["configuration_depth"],
-                proposal_time=event.time,
-                block_size=block.size,
-                transaction_count=len(block.transactions),
-                transaction_ids=tuple(transaction.id for transaction in block.transactions),
-                configured_block_size=state.node.reconfiguration_state.configuration.block_size,
-                configured_block_time=state.node.reconfiguration_state.configuration.block_time,
-            )
-        )
         # block created, change state, and broadcast it.
         logger.debug(f"[Node {state.node.id}] PROPOSE: Block created successfully, transitioning from {state.state} to pre_prepared")
         state.state = "pre_prepared"
@@ -294,22 +277,9 @@ def commit(state: "PBFT", event: "Event") -> str:
 
             # if we have enough votes
             if state.count_votes("commit") >= Parameters.application["required_messages"]:
-                InstrumentationCollector.record_local_consensus_decision(
-                    LocalConsensusDecisionRecord(
-                        block_id=state.block.id,
-                        node_id=state.node.id,
-                        decision_time=time,
-                        consensus_protocol=state.NAME,
-                        round=state.rounds.round,
-                        configuration_depth=state.block.extra_data["configuration_depth"],
-                        decision_path="pbft_commit",
-                        quorum_size=Parameters.application["required_messages"],
-                        validator_count=state.node.active_validator_set.count,
-                    )
-                )
                 # add block to local blockchain
                 logger.debug(f"[Node {state.node.id}] COMMIT: Sufficient commit votes received! Adding block {block.id} to blockchain")
-                state.node.add_block(state.block, time, cause="local_consensus_decision")
+                state.node.add_block(state.block, time)
 
                 Parameters.simulation["blockchain"] = Parameters.simulation.get("blockchain", dict())
                 if block.id not in Parameters.simulation["blockchain"]:
@@ -377,7 +347,7 @@ def new_block(state: "PBFT", event: "Event") -> str:
         return "detected_desync"
 
     logger.debug(f"[Node {state.node.id}] NEW_BLOCK: Adding block {block.id} to local blockchain and starting new round {block.extra_data['round'] + 1}")
-    state.node.add_block(block.copy(), time, cause="finalized_block_announcement")
+    state.node.add_block(block.copy(), time)
     state.start(time, block.extra_data["round"] + 1)
 
     # we are now in a new round - check the backlog for any missed round messages from early nodes

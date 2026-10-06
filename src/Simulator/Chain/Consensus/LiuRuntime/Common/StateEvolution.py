@@ -12,14 +12,10 @@ from Chain.Consensus.LiuRuntime.Common.RuntimeEvaluation import (
 )
 from Chain.Consensus.LiuRuntime.Common.StateBuilder import LiuRuntimeStateBuildResult, LiuRuntimeStateBuilder
 from Liu.Action import LiuAction
-from Liu.AnalyticalConsensus import AnalyticalConsensusResult
 from Liu.LinkFSMC import LinkFSMCState
 from Liu.Validation import require_finite_number
 from Utils.Instrumentation import InstrumentationCollector
-from Utils.LiuRuntimeInstrumentation import (
-    LiuRuntimeInstrumentationCollector,
-    RuntimeLiuEpochEvaluationRecord,
-)
+from Utils.LiuRuntimeInstrumentation import LiuRuntimeInstrumentationCollector
 
 
 class LiuRuntimeStateEvolution:
@@ -111,7 +107,6 @@ class LiuRuntimeStateEvolution:
     def evaluate_epoch(
         self,
         evaluator: LiuRuntimeConstraintEvaluator,
-        analytical_result: AnalyticalConsensusResult,
         *,
         boundary_time: float,
         stake_gini_threshold: float,
@@ -143,7 +138,6 @@ class LiuRuntimeStateEvolution:
                 active.threat_scenario,
                 self.state_builder.geographic_model,
                 measurement,
-                analytical_result,
                 stake_gini_threshold,
                 geographic_gini_threshold,
                 finality_multiplier_omega,
@@ -198,19 +192,6 @@ class LiuRuntimeStateEvolution:
         )
         self.link_fsmc_state = next_fsmc
         self.current_state = next_state
-        if evaluation is not None:
-            LiuRuntimeInstrumentationCollector.epoch_evaluations.append(
-                RuntimeLiuEpochEvaluationRecord(
-                    evaluation.execution_measurement.epoch_id,
-                    evaluation.reward_result.state_hash,
-                    evaluation.reward_result.action_hash,
-                    evaluation.execution_measurement.deterministic_hash(),
-                    evaluation.constraint_result.deterministic_hash(),
-                    evaluation.reward_result.deterministic_hash(),
-                    next_state.state_hash,
-                    boundary_time,
-                )
-            )
         self._executing_epoch_started_at = None
         self._executing_action_hash = None
         self._executing_action = None

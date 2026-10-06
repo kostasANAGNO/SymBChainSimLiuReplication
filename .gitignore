@@ -187,3 +187,7 @@ experiments/liu_replication/**/checkpoint.json
 experiments/liu_replication/**/*_final_checkpoint.json
 experiments/liu_replication/**/checkpoint_manifest_mismatch_probe.json
 experiments/liu_replication/**/step_metrics.csv
+
+# Local-only tests (development aid; not versioned)
+tests/
+experiments/liu_replication/drl/tests/

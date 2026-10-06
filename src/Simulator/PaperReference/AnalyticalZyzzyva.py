@@ -1,6 +1,6 @@
 """Liu Appendix B Zyzzyva fast/recovery performance abstraction."""
 
-from Liu.AnalyticalConsensus import AnalyticalConsensusInput, AnalyticalConsensusModel, AnalyticalConsensusResult, ZyzzyvaAnalyticalPath
+from PaperReference.AnalyticalConsensus import AnalyticalConsensusInput, AnalyticalConsensusModel, AnalyticalConsensusResult, ZyzzyvaAnalyticalPath
 from Liu.Protocol import LiuConsensusProtocol
 
 

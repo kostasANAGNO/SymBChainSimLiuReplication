@@ -27,7 +27,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 sys.path.insert(0, str(ROOT / "src" / "Simulator"))
 
-from Liu.ReferenceCore import LiuReferenceParameters, evaluate_reference
+from Liu.ReferenceCore import LiuReferenceParameters
+from PaperReference.ReferenceEvaluation import evaluate_reference
 from Liu.LinkState import LinkStateMatrix
 from Liu.ContinuousSpatial import ContinuousSpatialIntensityModel, planar_gradient_intensity
 from Liu.Protocol import LiuConsensusProtocol

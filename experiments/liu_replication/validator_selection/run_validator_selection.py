@@ -45,6 +45,7 @@ from Chain.Consensus.LiuRuntime.Common.SingleActionRuntime import (
 from Liu.Action import LiuAction
 from Liu.Protocol import LiuConsensusProtocol
 from Liu.ReferenceCore import LiuReferenceParameters
+from PaperReference.Comparison import paper_reference_for
 from Liu.ContinuousSpatial import ContinuousSpatialIntensityModel, planar_gradient_intensity
 
 # ── Population parameters ──────────────────────────────────────────────────────
@@ -205,7 +206,7 @@ def _run_one(
             workload_tx_size_mb=TX_SIZE_MB,
             max_events=2_000_000,
         )
-        p = result.paper_reference
+        p = paper_reference_for(snapshot, action, geo, params)
         d = result.des_observed
 
         row.update(
@@ -232,7 +233,7 @@ def _run_one(
         # LIU_QUORUM raises ValueError when f>0 (F^2=0 means zero fault tolerance).
         # This is semantically correct: C3 fails, reward=0. Record as SUCCESS with C3=False.
         if "F^2=0" in msg or "infeasible" in msg.lower():
-            from Liu.ReferenceCore import evaluate_reference
+            from PaperReference.ReferenceEvaluation import evaluate_reference
             from Liu.LinkState import LinkStateMatrix
             links = LinkStateMatrix.from_rows(LINK_ROWS)
             geo = build_geo_model()

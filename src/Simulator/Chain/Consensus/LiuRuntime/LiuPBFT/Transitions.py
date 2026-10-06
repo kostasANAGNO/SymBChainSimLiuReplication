@@ -433,7 +433,7 @@ def receive_reply(protocol, event) -> str:
     previous = state.phase
     state.phase = LiuPBFTPhase.PROTOCOL_FINALIZED
     protocol.record_phase(previous, state.phase, event.time, event.liu_context.logical_message_id, identity)
-    protocol.node.add_block(state.block.copy(), event.time, cause="protocol_finality")
+    protocol.node.add_block(state.block.copy(), event.time)
     commit_certificates = tuple(selected)
     for receiver in protocol.transport.nodes:
         if receiver.id != protocol.node.id:
@@ -477,7 +477,7 @@ def receive_finalized_block(protocol, event) -> str:
         protocol.runtime_configuration.commit_quorum,
     ):
         return "invalid"
-    protocol.node.add_block(block.copy(), event.time, cause="certified_finalized_block_announcement")
+    protocol.node.add_block(block.copy(), event.time)
     protocol.start(event.time, 0)
     return "new_state"
 

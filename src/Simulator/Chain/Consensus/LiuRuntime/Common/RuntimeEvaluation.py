@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from math import floor, isclose
+from math import floor
 from typing import Iterable
 
 from Liu.Action import LiuAction
-from Liu.AnalyticalConsensus import AnalyticalConsensusResult
 from Liu.Feasibility import ConstraintResult, FeasibilityResult
 from Liu.Protocol import LiuConsensusProtocol
 from Liu.Serialization import CanonicalSerializable
@@ -246,7 +245,6 @@ class LiuRuntimeConstraintInput:
     threat_scenario: ThreatScenario
     geographic_model: GridSpatialIntensityModel
     execution_measurement: LiuRuntimeExecutionMeasurement
-    analytical_result: AnalyticalConsensusResult
     stake_gini_threshold: float
     geographic_gini_threshold: float
     finality_multiplier_omega: float
@@ -270,17 +268,6 @@ class LiuRuntimeConstraintInput:
             or self.execution_measurement.protocol is not self.action.consensus_protocol
         ):
             raise ValueError("execution measurement must align with the executed epoch/action protocol")
-        if not isinstance(self.analytical_result, AnalyticalConsensusResult):
-            raise ValueError("analytical_result must be an AnalyticalConsensusResult")
-        if self.analytical_result.protocol is not self.action.consensus_protocol:
-            raise ValueError("analytical result protocol must match the action")
-        if not isclose(
-            self.analytical_result.block_interval_s,
-            self.action.block_interval_s,
-            rel_tol=0.0,
-            abs_tol=1e-15,
-        ):
-            raise ValueError("analytical result block interval must match the action")
         object.__setattr__(self, "epoch_id", epoch_id)
         object.__setattr__(
             self,
@@ -378,8 +365,6 @@ class LiuRewardResult(CanonicalSerializable):
     liu_throughput: float
     reward: float
     observed_des_tps: float
-    analytical_consensus_latency: float
-    analytical_finality_latency: float
     reward_policy_version: str
     observed_tps_policy_version: str
     created_at: float
@@ -392,8 +377,7 @@ class LiuRewardResult(CanonicalSerializable):
         if self.feasible != (self.status is LiuRewardStatus.FEASIBLE):
             raise ValueError("feasible status is inconsistent")
         for field_name in (
-            "liu_throughput", "reward", "observed_des_tps",
-            "analytical_consensus_latency", "analytical_finality_latency", "created_at",
+            "liu_throughput", "reward", "observed_des_tps", "created_at",
         ):
             object.__setattr__(self, field_name, require_finite_number(getattr(self, field_name), field_name, non_negative=True))
         if self.status is not LiuRewardStatus.FEASIBLE and self.reward != 0.0:
@@ -406,8 +390,6 @@ class LiuRewardResult(CanonicalSerializable):
     def to_dict(self) -> dict:
         return {
             "action_hash": self.action_hash,
-            "analytical_consensus_latency": self.analytical_consensus_latency,
-            "analytical_finality_latency": self.analytical_finality_latency,
             "constraint_result_hash": self.constraint_result_hash,
             "created_at": self.created_at,
             "epoch_id": self.epoch_id,
@@ -425,14 +407,6 @@ class LiuRewardResult(CanonicalSerializable):
     @property
     def liu_throughput_tps(self) -> float:
         return self.liu_throughput
-
-    @property
-    def analytical_consensus_latency_s(self) -> float:
-        return self.analytical_consensus_latency
-
-    @property
-    def analytical_finality_latency_s(self) -> float:
-        return self.analytical_finality_latency
 
 
 @dataclass(frozen=True, slots=True)
@@ -569,7 +543,6 @@ class LiuRuntimeConstraintEvaluator:
         else:
             status = LiuRewardStatus.ACTION_INFEASIBLE
         reward = liu_throughput if status is LiuRewardStatus.FEASIBLE else 0.0
-        analytical = evaluation_input.analytical_result
         reward_result = LiuRewardResult(
             evaluation_input.epoch_id,
             constraints.state_hash,
@@ -581,8 +554,6 @@ class LiuRuntimeConstraintEvaluator:
             liu_throughput,
             reward,
             observed_tps,
-            analytical.consensus_delay_s,
-            analytical.finality_delay_s,
             self.REWARD_POLICY,
             self.OBSERVED_TPS_POLICY,
             measurement.epoch_end_time,

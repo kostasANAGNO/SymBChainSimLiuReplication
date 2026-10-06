@@ -34,7 +34,6 @@ sys.path.insert(0, str(ROOT / "src" / "Simulator"))
 
 from Liu.Action import LiuAction
 from Liu.ContinuousSpatial import ContinuousSpatialIntensityModel, planar_gradient_intensity
-from Liu.DigitalTwinPaired import LiuPaperReferenceRecord
 from Liu.LinkFSMC import (
     LinkFSMCState,
     LinkRateLevels,
@@ -43,7 +42,8 @@ from Liu.LinkFSMC import (
 )
 from Liu.LinkState import LinkStateMatrix
 from Liu.Protocol import LiuConsensusProtocol
-from Liu.ReferenceCore import LiuReferenceParameters, evaluate_reference
+from Liu.ReferenceCore import LiuReferenceParameters
+from PaperReference.Comparison import paper_reference_for
 from Chain.Consensus.LiuRuntime.Common.SingleActionRuntime import (
     C2DeadlineExceeded,
     DESQueueExhausted,
@@ -231,7 +231,7 @@ class LiuDynamicEpochEnv:
             )
 
             d = result.des_observed
-            p = result.paper_reference
+            p = paper_reference_for(snapshot, action, self._geo, self._ref_params)
             self._fsmc = self._fsmc.advance(self._rng)
             self._step_count += 1
 
@@ -266,22 +266,7 @@ class LiuDynamicEpochEnv:
             else:
                 reason = DESFailureReason.RUNTIME_GUARD_FAILURE
 
-            links = LinkStateMatrix.from_rows(link_rows)
-            mask = tuple(1 if i in set(action.validator_ids) else 0 for i in range(self._N))
-            malicious = sum(1 for f in self._faulty if f in set(action.validator_ids))
-            oracle = evaluate_reference(
-                node_stakes=self._stakes,
-                node_capabilities_ghz=self._caps,
-                link_rates=links,
-                geographic_gini=self._geo.geographic_gini(),
-                producer_mask=mask,
-                protocol=action.consensus_protocol,
-                block_size_mb=action.block_size_mb,
-                block_interval_s=action.block_interval_s,
-                malicious_count=malicious,
-                params=self._ref_params,
-            )
-            paper = LiuPaperReferenceRecord.from_reference(oracle)
+            paper = paper_reference_for(snapshot, action, self._geo, self._ref_params)
             self._fsmc = self._fsmc.advance(self._rng)
             self._step_count += 1
 

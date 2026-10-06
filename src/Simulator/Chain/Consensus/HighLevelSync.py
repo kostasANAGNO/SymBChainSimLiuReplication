@@ -201,7 +201,6 @@ def handle_local_sync_event(event) -> str:
                 time=-1,  # time added is calculated by create_local_sync_event_configuration
                 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
                 update_time_added=False,
-                cause="synchronization",
             )
 
     if blockchain[-1].depth < sync_chain[-1].depth:

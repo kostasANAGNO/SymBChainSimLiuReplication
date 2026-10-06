@@ -30,6 +30,7 @@ from Liu.Action import LiuAction
 from Liu.ContinuousSpatial import ContinuousSpatialIntensityModel, planar_gradient_intensity
 from Liu.Protocol import LiuConsensusProtocol
 from Liu.ReferenceCore import LiuReferenceParameters
+from PaperReference.Comparison import paper_reference_for
 
 # ── Fixed sweep parameters (N=100, K=21, paper Table I population) ────────────
 FIXED_SEED = 0
@@ -131,7 +132,7 @@ def _run_one(index: int, protocol_name: str, s_b: float, t_i: float) -> _RunResu
             workload_tx_size_mb=_TX_SIZE_MB,
             max_events=2_000_000,
         )
-        p = result.paper_reference
+        p = paper_reference_for(snapshot, action, _build_geo_model(), _build_params())
         d = result.des_observed
         paper_t_c = p.consensus_latency_s
         paper_t_f = p.finality_latency_s

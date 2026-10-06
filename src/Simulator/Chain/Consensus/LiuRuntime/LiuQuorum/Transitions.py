@@ -16,7 +16,6 @@ from Utils.LiuRuntimeInstrumentation import (
     LiuRuntimeInstrumentationCollector,
     ProtocolCertificateRecord,
     ProtocolFinalityRecord,
-    QuorumRequestTimeoutRecord,
 )
 
 
@@ -80,21 +79,6 @@ def start_request(protocol, event) -> str:
     )
     configuration = protocol.runtime_configuration
     scheduled_timeout = configuration.request_timeout_for(estimated_round_trip)
-    LiuRuntimeInstrumentationCollector.quorum_request_timeouts.append(
-        QuorumRequestTimeoutRecord(
-            protocol.NAME,
-            configuration.REQUEST_TIMEOUT_POLICY_VERSION,
-            protocol.epoch_context.epoch_id,
-            state.height,
-            state.client_id,
-            estimated_round_trip,
-            scheduled_timeout,
-            configuration.timeout_safety_factor,
-            configuration.request_timeout_s,
-            configuration.timeout_maximum_s,
-            event.time,
-        )
-    )
     Messages.schedule_timeout(
         protocol,
         event.time + scheduled_timeout,
@@ -242,7 +226,7 @@ def receive_reply(protocol, event) -> str:
     state.phase = LiuQuorumPhase.FINALIZED
     state.finalized = True
     protocol.record_phase(previous, state.phase, event.time, event.liu_context.logical_message_id, identity)
-    protocol.node.add_block(state.block.copy(), event.time, cause="protocol_finality")
+    protocol.node.add_block(state.block.copy(), event.time)
     configured_size = protocol.epoch_context.epoch_configuration.block_size_mb
     announcement_size = protocol.message_size_policy.finalized_announcement_size_mb(configured_size)
     for receiver in protocol.transport.nodes:
@@ -285,6 +269,6 @@ def receive_finalized_block(protocol, event) -> str:
         return "invalid"
     if not protocol.valid_block_identity(block, identity):
         return "invalid"
-    protocol.node.add_block(block.copy(), event.time, cause="certified_finalized_block_announcement")
+    protocol.node.add_block(block.copy(), event.time)
     protocol.start(event.time, context.view + 1)
     return "new_state"

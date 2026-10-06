@@ -593,7 +593,7 @@ def oracle_best_paper_reference(actions: list[dict]) -> dict:
     Limited exhaustive oracle: for each FSMC state, use paper reference to find
     the best action from the 3915 action domain. Fast (~seconds, no DES).
     """
-    from Liu.ReferenceCore import evaluate_reference
+    from PaperReference.ReferenceEvaluation import evaluate_reference
     from Liu.LinkState import LinkStateMatrix
 
     oracle_states = {

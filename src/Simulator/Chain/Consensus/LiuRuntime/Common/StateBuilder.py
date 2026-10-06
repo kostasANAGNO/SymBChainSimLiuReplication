@@ -14,7 +14,6 @@ from Liu.State import LiuState
 from Liu.Validation import require_finite_number
 from Utils.DecentralizationMetrics import canonical_pairwise_gini
 from Utils.Instrumentation import TransactionCreationRecord
-from Utils.LiuRuntimeInstrumentation import LiuRuntimeInstrumentationCollector, RuntimeLiuStateRecord
 
 
 @dataclass(frozen=True, slots=True)
@@ -172,20 +171,5 @@ class LiuRuntimeStateBuilder:
             stake_gini,
             stake_reason,
             geographic,
-        )
-        LiuRuntimeInstrumentationCollector.runtime_states.append(
-            RuntimeLiuStateRecord(
-                epoch_context.epoch_id,
-                state_hash,
-                chi_bytes,
-                self.CHI_POLICY_VERSION,
-                self.TRANSACTION_SIZE_UNIT_POLICY,
-                chi_source,
-                sample_count,
-                epoch_context.link_state_matrix.deterministic_hash(),
-                action_hash,
-                previous_state_hash,
-                observation_time,
-            )
         )
         return result

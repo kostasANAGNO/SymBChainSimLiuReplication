@@ -1,13 +1,14 @@
-"""Single-action DES digital-twin closed loop (production, PBFT-authoritative).
+"""Single-action DES digital-twin closed loop (PBFT, Zyzzyva and LiuQuorum).
 
 Assembles a real SymBChainSim runtime (Engine.EventQueue.Queue + real Node objects +
-Network + TransactionFactory + the LiuPBFT runtime protocol) from an explicit S0 snapshot,
+Network + TransactionFactory + the Liu runtime protocols) from an explicit S0 snapshot,
 applies one Liu action A0, drives the ACTUAL event engine to one finalized height, measures
-the DES outcome, and produces a paired paper-vs-DES evaluation plus the next state S1.
+the DES outcome, and returns the DES-observed constraints/reward plus the next state S1.
 
-The analytical Liu reference oracle is computed beside the DES execution and never affects it.
+The Appendix-B analytical reference is NOT computed here; compare against it explicitly with
+``PaperReference.Comparison`` when needed.
 
-Scope: PBFT only (PBFT_DES_RUNTIME_VERIFIED). Zyzzyva/Quorum remain PENDING for authority.
+Epoch 0 is bootstrapped with PBFT regardless of the action's protocol.
 Network evolution is disabled for the controlled single-action test: R1 = R0
 (NETWORK_EVOLUTION_DISABLED_FOR_CONTROLLED_SINGLE_ACTION_TEST); this is NOT Liu's FSMC run.
 """
@@ -36,16 +37,11 @@ from Engine.EventQueue import Queue
 from Engine.Handler import handle_event
 from Liu.Action import LiuAction
 from Liu.ContinuousSpatial import ContinuousSpatialIntensityModel
-from Liu.DigitalTwinPaired import (
-    LiuDigitalTwinDelta,
-    LiuDigitalTwinPairedEvaluation,
-    LiuPaperReferenceRecord,
-    evaluate_des_observed,
-)
+from Liu.DigitalTwin import LiuDigitalTwinEvaluation, evaluate_des_observed
 from Liu.EpochConfiguration import EpochConfiguration
 from Liu.LinkState import LinkStateMatrix
 from Liu.Protocol import LiuConsensusProtocol
-from Liu.ReferenceCore import LiuReferenceParameters, evaluate_reference
+from Liu.ReferenceCore import LiuReferenceParameters, nominal_throughput_tps
 from Liu.Spatial import SpatialProfileSet
 from Liu.State import LiuState
 from Liu.Threat import ThreatScenario
@@ -319,8 +315,8 @@ def run_single_action(
     offered_workload_tx: int = 2000,
     workload_tx_size_mb: float | None = None,
     max_events: int = 200_000,
-) -> LiuDigitalTwinPairedEvaluation:
-    """Execute S0 -> A0 -> real DES PBFT -> measured outcome -> reward_des_realized -> S1."""
+) -> LiuDigitalTwinEvaluation:
+    """Execute S0 -> A0 -> real DES -> measured outcome -> DES rewards -> S1."""
     if action.consensus_protocol not in (
         LiuConsensusProtocol.PBFT,
         LiuConsensusProtocol.ZYZZYVA,
@@ -391,23 +387,8 @@ def run_single_action(
         else None
     )
 
-    # Analytical Liu reference oracle for the SAME S0, A0 (read-only, beside execution).
-    # Evaluated FIRST so its Omega (= floor(S_B/chi)/T_I) can gate the DES-side Liu-compatible
-    # reward without duplicating the formula.
-    mask = tuple(1 if i in set(action.validator_ids) else 0 for i in range(snapshot.node_count))
-    oracle = evaluate_reference(
-        node_stakes=snapshot.stakes_tokens,
-        node_capabilities_ghz=snapshot.capabilities_ghz,
-        link_rates=snapshot.link_matrix(),
-        geographic_gini=geographic_model.geographic_gini(),
-        producer_mask=mask,
-        protocol=action.consensus_protocol,
-        block_size_mb=action.block_size_mb,
-        block_interval_s=action.block_interval_s,
-        malicious_count=assembled.threat.malicious_validator_count(action.validator_ids),
-        params=reference_params,
-    )
-    paper = LiuPaperReferenceRecord.from_reference(oracle)
+    # Liu's Omega = floor(S_B/chi)/T_I (Eq. 1); gated below by the DES-observed C1/C2/C3.
+    nominal_omega = nominal_throughput_tps(action.block_size_mb, action.block_interval_s, reference_params)
 
     des = evaluate_des_observed(
         selected_validator_stakes=[snapshot.stakes_tokens[i] for i in action.validator_ids],
@@ -425,9 +406,8 @@ def run_single_action(
         finalized_transactions=finalized_tx,
         measurement_duration_s=duration,
         direct_tx_finalization_latency_s=direct_latency,
-        throughput_paper_nominal=paper.throughput_paper_nominal,
+        throughput_paper_nominal=nominal_omega,
     )
-    delta = LiuDigitalTwinDelta.between(paper, des)
 
     # S1: static Upsilon/x/c; R1 = R0 (network evolution disabled); chi' empirical from the epoch.
     empirical_chi_bytes = (
@@ -450,11 +430,9 @@ def run_single_action(
         "state_hash": state1.deterministic_hash(),
     }
 
-    return LiuDigitalTwinPairedEvaluation(
+    return LiuDigitalTwinEvaluation(
         state={**state0.to_dict(), "state_hash": state0.deterministic_hash()},
         action=action.to_dict(),
-        paper_reference=paper,
         des_observed=des,
-        delta=delta,
         next_state=next_state,
     )
