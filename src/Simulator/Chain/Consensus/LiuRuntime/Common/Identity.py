@@ -1,6 +1,7 @@
 """Canonical collision-resistant identities for Liu runtime blocks/messages."""
 
 from dataclasses import dataclass
+from functools import lru_cache
 import hashlib
 import json
 
@@ -10,6 +11,21 @@ from Liu.Serialization import CanonicalSerializable
 def _sha256(value: dict) -> str:
     encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+@lru_cache(maxsize=16)
+def _block_digest(epoch_id: int, height: int, parent: str, client_id: int, transactions: tuple) -> str:
+    # Pure function of its arguments: every validator recomputes the digest of the same
+    # block, so memoizing it yields identical bytes at a fraction of the cost.
+    return _sha256(
+        {
+            "client_id": client_id,
+            "epoch_id": epoch_id,
+            "height": height,
+            "parent_digest": parent,
+            "transactions": [{"id": tx_id, "size_mb": size} for tx_id, size in transactions],
+        }
+    )
 
 
 def parent_digest(block) -> str:
@@ -35,15 +51,7 @@ class LiuBlockIdentity(CanonicalSerializable):
 
     @classmethod
     def create(cls, epoch_id: int, height: int, parent: str, client_id: int, transactions: tuple) -> "LiuBlockIdentity":
-        digest = _sha256(
-            {
-                "client_id": client_id,
-                "epoch_id": epoch_id,
-                "height": height,
-                "parent_digest": parent,
-                "transactions": [{"id": tx.id, "size_mb": tx.size} for tx in transactions],
-            }
-        )
+        digest = _block_digest(epoch_id, height, parent, client_id, tuple((tx.id, tx.size) for tx in transactions))
         return cls(epoch_id, height, parent, digest)
 
     def to_dict(self) -> dict:
