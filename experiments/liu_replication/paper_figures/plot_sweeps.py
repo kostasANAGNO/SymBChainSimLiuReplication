@@ -2,7 +2,7 @@
 
 Left panel: our absolute values. Right panel: values normalised to the first sweep point, for ours and
 for the paper's start/end points, so the *shape* is comparable despite the different absolute scale.
-    python plot_sweeps.py [runs/sweeps] [runs/sweeps/plots]
+    python plot_sweeps.py [runs/sweeps_n100] [runs/sweeps_n100/plots]
 """
 import json
 import sys
