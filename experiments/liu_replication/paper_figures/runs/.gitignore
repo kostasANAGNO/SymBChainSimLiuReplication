@@ -1,0 +1,15 @@
+*.ckpt
+*.tmp
+*.out
+sweeps/*.weights
+sweeps/*.out
+sweeps_n100/*.weights
+sweeps_n100/*.out
+n100_pilot/*/*.ckpt
+n100_pilot/*/*.tmp
+n100_pilot/*/*.out
+fig5_n100_hi/*.ckpt
+fig5_n100_hi/*.tmp
+fig5_n100_hi/*.out
+sweeps_n100_hi/*.weights
+sweeps_n100_hi/*.out

@@ -1,0 +1,7 @@
+{
+  "_note": "Approximate values READ OFF the printed figures of Liu et al., IEEE TII 15(6) 2019 (start/end points of each curve). Not tabulated in the paper; +-3% reading error.",
+  "fig7": {"x": [2, 20], "unit": "TPS", "proposed": [1.59e5, 2.27e5], "no_cas": [1.55e5, 2.21e5], "fixed_block_size": [1.47e5, 1.84e5], "fixed_block_interval": [1.43e5, 1.82e5], "static": [1.42e5, 1.74e5]},
+  "fig8": {"x": [100, 550], "unit": "TPS", "proposed": [2.12e5, 1.31e5], "no_cas": [2.06e5, 1.28e5], "fixed_block_size": [1.75e5, 1.16e5], "fixed_block_interval": [1.72e5, 1.14e5], "static": [1.58e5, 1.07e5]},
+  "fig9": {"x": [10, 30], "unit": "s", "proposed": [5.8, 3.3], "no_cas": [6.2, 3.7], "fixed_block_size": [7.6, 5.7], "fixed_block_interval": [7.8, 6.3], "static": [8.6, 7.2]},
+  "fig10": {"x": [1, 10], "unit": "TPS", "proposed": [6100, 9350], "no_cas": [6050, 8950], "fixed_block_size": [6000, 6000], "fixed_block_interval": [5050, 7200], "static": [4750, 6950]}
+}
